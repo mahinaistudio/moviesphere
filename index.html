@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -346,22 +346,20 @@ function confirmModal(msg) {
 
 const _debounceTimers = {};
 
-const _ddCallbacks = {};
-function ddCallback(id, val) {
-  const cb = _ddCallbacks[id];
-  if (cb) cb(val);
-  const el = document.getElementById(id);
-  if (el) el.classList.remove('open');
-}
+let _ddData = {};
+let _ddOnChange = {};
+let _ddIdCounter = 0;
 function dropdown(id, options, selected, onChangeFn) {
-  _ddCallbacks[id] = onChangeFn;
+  const ddId = id + '_' + (++_ddIdCounter);
+  _ddOnChange[ddId] = onChangeFn;
+  _ddData[ddId] = { options, selected };
   const label = options.find(o => o[0] === selected)?.[1] || selected;
-  return `<div class="dropdown" id="${id}">
-    <button class="dropdown-btn" onclick="toggleDropdown('${id}')">
+  return `<div class="dropdown" id="${ddId}">
+    <button class="dropdown-btn" onclick="toggleDropdown('${ddId}')">
       <span>${esc(label)}</span>${ic('chevronDown')}
     </button>
     <div class="dropdown-menu">
-      ${options.map(([val, lbl]) => `<button class="dropdown-item${val===selected?' selected':''}" onclick="ddCallback('${id}','${val}')">${esc(lbl)}</button>`).join('')}
+      ${options.map(([val, lbl]) => `<button class="dropdown-item${val===selected?' selected':''}" data-dd="${ddId}" data-val="${val}">${esc(lbl)}</button>`).join('')}
     </div>
   </div>`;
 }
@@ -373,7 +371,19 @@ function toggleDropdown(id) {
   if (!wasOpen) el.classList.add('open');
 }
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.dropdown')) document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+  const item = e.target.closest('.dropdown-item');
+  if (item) {
+    const ddId = item.getAttribute('data-dd');
+    const val = item.getAttribute('data-val');
+    const el = document.getElementById(ddId);
+    if (el) el.classList.remove('open');
+    const cb = _ddOnChange[ddId];
+    if (cb) cb(val);
+    return;
+  }
+  if (!e.target.closest('.dropdown')) {
+    document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+  }
 });
 
 function debounce(key, fn, ms) {
