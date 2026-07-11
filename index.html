@@ -346,6 +346,28 @@ function confirmModal(msg) {
 
 const _debounceTimers = {};
 
+// ── Blink-free render helper ──
+let _renderPending = false;
+let _renderQueued = null;
+function smoothRender(root, html) {
+  if (root._lastHTML === html) return;
+  root._lastHTML = html;
+  _renderQueued = { root, html };
+  if (_renderPending) return;
+  _renderPending = true;
+  requestAnimationFrame(() => {
+    _renderPending = false;
+    const { root: r, html: h } = _renderQueued;
+    _renderQueued = null;
+    if (r._lastHTML !== h) { smoothRender(r, r._lastHTML); return; }
+    if (document.startViewTransition) {
+      document.startViewTransition(() => { r.innerHTML = h; });
+    } else {
+      r.innerHTML = h;
+    }
+  });
+}
+
 // ── Custom Dropdown ──
 let _ddCallbacks = {};
 let _ddData = {};
@@ -773,6 +795,22 @@ async function toggleEp(itemId, si, ei) {
   const progText = document.querySelector(`[data-progtext="${itemId}"]`);
   if (progText) progText.textContent = `${total > 0 ? watched : 0} / ${total || 0} episodes (${progress}%)`;
 
+  const statusLabel = STATUSES[status] || status;
+  const statusColor = STATUS_COLOR[status] || '#6b7280';
+  const dd = document.querySelector(`.dropdown[data-id="${itemId}"]`);
+  if (dd) {
+    const btnSpan = dd.querySelector('.dropdown-btn span');
+    if (btnSpan) btnSpan.textContent = statusLabel;
+    dd.querySelectorAll('.dropdown-item').forEach(el => {
+      el.classList.toggle('selected', el.getAttribute('data-val') === status);
+    });
+  }
+  const statusBadge = document.querySelector(`[data-status-badge="${itemId}"]`);
+  if (statusBadge) {
+    statusBadge.textContent = statusLabel;
+    statusBadge.style.color = statusColor;
+  }
+
   await api('PATCH', '/api/items/' + itemId, { seasons: updated.seasons, watchedEpisodes: watched, progress, status });
 }
 
@@ -965,7 +1003,7 @@ function renderAdd() {
         ${dropdown('manual-type-dd', Object.entries(TYPES).map(([k,v])=>[k,v.label]), manualForm.type, function(v){ manualForm.type=v; if(manualForm.status==='watching'&&v==='movie') manualForm.status='plan_to_watch'; render(); })}
       </div>
       <div class="input-group"><label>Status</label>
-        ${dropdown('manual-status-dd', (manualForm.type==='movie' ? [['plan_to_watch','Plan to Watch'],['completed','Completed']] : Object.entries(STATUSES)), manualForm.status, function(v){ manualForm.status=v; })}
+        ${dropdown('manual-status-dd', (manualForm.type==='movie' ? [['plan_to_watch','Plan to Watch'],['completed','Completed']] : Object.entries(STATUSES)), manualForm.status, function(v){ manualForm.status=v; render(); })}
       </div>
       <div class="input-group"><label>Year</label><input class="input" type="number" value="${manualForm.year}" oninput="manualForm.year=this.value"/></div>
       <div class="input-group"><label>Rating (0\u201310)</label><input class="input" type="number" min="0" max="10" step="0.1" value="${manualForm.rating}" oninput="manualForm.rating=this.value"/></div>
@@ -1416,7 +1454,7 @@ function render() {
   document.getElementById('nav-settings').className = 'nav-btn' + (state.page==='settings'?' active':'');
   renderUserSidebar();
   const fn = RENDERERS[state.page] || renderDashboard;
-  document.getElementById('page-root').innerHTML = fn();
+  smoothRender(document.getElementById('page-root'), fn());
 }
 
 async function boot() {
