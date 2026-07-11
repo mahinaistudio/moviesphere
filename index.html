@@ -48,7 +48,7 @@ select.input option{background:rgba(16,16,24,0.97);color:var(--text-primary);pad
 .dropdown-btn:hover{border-color:var(--border-hover);background:rgba(255,255,255,0.06)}
 .dropdown-btn svg{width:14px;height:14px;color:var(--text-tertiary);transition:transform 0.2s}
 .dropdown.open .dropdown-btn svg{transform:rotate(180deg)}
-.dropdown-menu{position:fixed;background:rgba(16,16,24,0.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:4px;z-index:9999;box-shadow:var(--shadow-lg);animation:dropdownIn 0.15s ease;display:none;min-width:140px}
+.dropdown-menu{position:absolute;top:calc(100% + 4px);left:0;background:rgba(16,16,24,0.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:4px;z-index:9999;box-shadow:var(--shadow-lg);animation:dropdownIn 0.15s ease;display:none;min-width:100%}
 .dropdown.open .dropdown-menu{display:block}
 .dropdown-item{padding:8px 14px;border-radius:var(--radius-sm);font-size:13px;color:var(--text-secondary);cursor:pointer;transition:all var(--transition-fast);display:block;width:100%;text-align:left;border:none;background:none}
 .dropdown-item:hover{background:rgba(255,255,255,0.06);color:var(--text-primary)}
@@ -346,6 +346,47 @@ function confirmModal(msg) {
 
 const _debounceTimers = {};
 
+// ── Custom Dropdown ──
+let _ddCallbacks = {};
+let _ddIdCounter = 0;
+function dropdown(id, options, selected, onChangeFn) {
+  const ddId = id + '_' + (++_ddIdCounter);
+  _ddCallbacks[ddId] = onChangeFn;
+  const label = options.find(o => o[0] === selected)?.[1] || selected;
+  return `<div class="dropdown" id="${ddId}">
+    <button class="dropdown-btn" onclick="toggleDropdown(event,'${ddId}')">
+      <span>${esc(label)}</span>${ic('chevronDown')}
+    </button>
+    <div class="dropdown-menu">
+      ${options.map(([val, lbl]) => `<button class="dropdown-item${val===selected?' selected':''}" data-dd="${ddId}" data-val="${val}">${esc(lbl)}</button>`).join('')}
+    </div>
+  </div>`;
+}
+function toggleDropdown(e, id) {
+  if (e) e.stopPropagation();
+  const el = document.getElementById(id);
+  if (!el) return;
+  const wasOpen = el.classList.contains('open');
+  document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+  if (!wasOpen) el.classList.add('open');
+}
+function closeAllDropdowns() {
+  document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+}
+document.addEventListener('click', function(e) {
+  const item = e.target.closest('.dropdown-item');
+  if (item) {
+    const ddId = item.getAttribute('data-dd');
+    const val = item.getAttribute('data-val');
+    const el = document.getElementById(ddId);
+    if (el) el.classList.remove('open');
+    const cb = _ddCallbacks[ddId];
+    if (cb) cb(val);
+    return;
+  }
+  if (!e.target.closest('.dropdown')) closeAllDropdowns();
+});
+
 function debounce(key, fn, ms) {
   clearTimeout(_debounceTimers[key]);
   _debounceTimers[key] = setTimeout(fn, ms);
@@ -623,12 +664,10 @@ function renderDetail() {
   <div class="detail-grid">
     <div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px">
-        <select class="input" style="width:auto;padding:7px 32px 7px 12px" onchange="updateItem('${esc(item.id)}',{status:this.value})">
-          ${item.type === 'movie'
-            ? [['plan_to_watch','Plan to Watch'],['completed','Completed']].map(([k,v])=>`<option value="${k}"${item.status===k?' selected':''}>${v}</option>`).join('')
-            : Object.entries(STATUSES).map(([k,v])=>`<option value="${k}"${item.status===k?' selected':''}>${v}</option>`).join('')
-          }
-        </select>
+        ${item.type === 'movie'
+          ? dropdown('status-dd', [['plan_to_watch','Plan to Watch'],['completed','Completed']], item.status, function(v){ updateItem('${esc(item.id)}',{status:v}); })
+          : dropdown('status-dd', Object.entries(STATUSES).map(([k,v])=>[k,v]), item.status, function(v){ updateItem('${esc(item.id)}',{status:v}); })
+        }
         <button class="btn btn-ghost" style="padding:7px 14px" onclick="openEditModal('${esc(item.id)}')">${ic('pencil')} Edit</button>
         <button class="btn btn-ghost" style="padding:7px 14px;color:var(--danger,#ef4444)" onclick="deleteItem('${esc(item.id)}')">${ic('trash')}</button>
       </div>
@@ -763,12 +802,10 @@ function openEditModal(id) {
     <div style="display:flex;flex-direction:column;gap:12px">
       <div class="input-group"><label>Title</label><input class="input" id="e-title" value="${esc(item.title)}"/></div>
       <div class="input-group"><label>Status</label>
-        <select class="input" id="e-status">
-          ${item.type === 'movie'
-            ? [['plan_to_watch','Plan to Watch'],['completed','Completed']].map(([k,v])=>`<option value="${k}"${item.status===k?' selected':''}>${v}</option>`).join('')
-            : Object.entries(STATUSES).map(([k,v])=>`<option value="${k}"${item.status===k?' selected':''}>${v}</option>`).join('')
-          }
-        </select>
+        ${item.type === 'movie'
+          ? dropdown('e-status-dd', [['plan_to_watch','Plan to Watch'],['completed','Completed']], item.status, function(v){ document.getElementById('e-status-val').value=v; }) + '<input type="hidden" id="e-status-val" value="' + item.status + '"/>'
+          : dropdown('e-status-dd', Object.entries(STATUSES).map(([k,v])=>[k,v]), item.status, function(v){ document.getElementById('e-status-val').value=v; }) + '<input type="hidden" id="e-status-val" value="' + item.status + '"/>'
+        }
       </div>
       <div class="input-group"><label>Your Rating (0\u201310)</label><input class="input" id="e-rating" type="number" min="0" max="10" step="0.1" value="${item.rating||''}"/></div>
       <div class="input-group"><label>Progress (%)</label><input class="input" id="e-progress" type="number" min="0" max="100" value="${item.progress||0}"/></div>
@@ -787,7 +824,7 @@ function openEditModal(id) {
 async function saveEdit(id) {
   const patch = {
     title:    document.getElementById('e-title').value,
-    status:   document.getElementById('e-status').value,
+    status:   document.getElementById('e-status-val').value,
     rating:   parseFloat(document.getElementById('e-rating').value)||null,
     progress: parseInt(document.getElementById('e-progress').value)||0,
     posterUrl:document.getElementById('e-poster').value||null,
@@ -854,17 +891,6 @@ async function saveManual() {
   }
 }
 
-function updateManualStatus() {
-  const sel = document.getElementById('manual-status');
-  if (!sel) return;
-  const isMovie = manualForm.type === 'movie';
-  const opts = isMovie ? [['plan_to_watch','Plan to Watch'],['completed','Completed']] : Object.entries(STATUSES);
-  sel.innerHTML = opts.map(([k,v])=>`<option value="${k}"${manualForm.status===k?' selected':''}>${v}</option>`).join('');
-  if (isMovie && manualForm.status === 'watching') {
-    manualForm.status = 'plan_to_watch';
-    sel.value = 'plan_to_watch';
-  }
-}
 
 function renderAdd() {
   return `<div class="page">
@@ -933,14 +959,10 @@ function renderAdd() {
         <input class="input" value="${esc(manualForm.title)}" oninput="manualForm.title=this.value"/>
       </div>
       <div class="input-group"><label>Type</label>
-        <select class="input" onchange="manualForm.type=this.value;updateManualStatus()">
-          ${Object.entries(TYPES).map(([k,v])=>`<option value="${k}"${manualForm.type===k?' selected':''}>${v.label}</option>`).join('')}
-        </select>
+        ${dropdown('manual-type-dd', Object.entries(TYPES).map(([k,v])=>[k,v.label]), manualForm.type, function(v){ manualForm.type=v; if(manualForm.status==='watching'&&v==='movie') manualForm.status='plan_to_watch'; render(); })}
       </div>
       <div class="input-group"><label>Status</label>
-        <select class="input" id="manual-status" onchange="manualForm.status=this.value">
-          ${(manualForm.type==='movie' ? [['plan_to_watch','Plan to Watch'],['completed','Completed']] : Object.entries(STATUSES)).map(([k,v])=>`<option value="${k}"${manualForm.status===k?' selected':''}>${v}</option>`).join('')}
-        </select>
+        ${dropdown('manual-status-dd', (manualForm.type==='movie' ? [['plan_to_watch','Plan to Watch'],['completed','Completed']] : Object.entries(STATUSES)), manualForm.status, function(v){ manualForm.status=v; })}
       </div>
       <div class="input-group"><label>Year</label><input class="input" type="number" value="${manualForm.year}" oninput="manualForm.year=this.value"/></div>
       <div class="input-group"><label>Rating (0\u201310)</label><input class="input" type="number" min="0" max="10" step="0.1" value="${manualForm.rating}" oninput="manualForm.rating=this.value"/></div>
