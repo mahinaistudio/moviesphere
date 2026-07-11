@@ -348,12 +348,15 @@ const _debounceTimers = {};
 
 // ── Custom Dropdown ──
 let _ddCallbacks = {};
+let _ddData = {};
 let _ddIdCounter = 0;
-function dropdown(id, options, selected, onChangeFn) {
+function dropdown(id, options, selected, onChangeFn, data) {
   const ddId = id + '_' + (++_ddIdCounter);
   _ddCallbacks[ddId] = onChangeFn;
+  if (data) _ddData[ddId] = data;
   const label = options.find(o => o[0] === selected)?.[1] || selected;
-  return `<div class="dropdown" id="${ddId}">
+  const dataAttr = data ? Object.entries(data).map(([k,v])=>` data-${k}="${esc(v)}"`).join('') : '';
+  return `<div class="dropdown" id="${ddId}"${dataAttr}>
     <button class="dropdown-btn" onclick="toggleDropdown(event,'${ddId}')">
       <span>${esc(label)}</span>${ic('chevronDown')}
     </button>
@@ -381,7 +384,7 @@ document.addEventListener('click', function(e) {
     const el = document.getElementById(ddId);
     if (el) el.classList.remove('open');
     const cb = _ddCallbacks[ddId];
-    if (cb) cb(val);
+    if (cb) cb(val, _ddData[ddId] || {});
     return;
   }
   if (!e.target.closest('.dropdown')) closeAllDropdowns();
@@ -665,8 +668,8 @@ function renderDetail() {
     <div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px">
         ${item.type === 'movie'
-          ? dropdown('status-dd', [['plan_to_watch','Plan to Watch'],['completed','Completed']], item.status, function(v){ updateItem('${esc(item.id)}',{status:v}); })
-          : dropdown('status-dd', Object.entries(STATUSES).map(([k,v])=>[k,v]), item.status, function(v){ updateItem('${esc(item.id)}',{status:v}); })
+          ? dropdown('status-dd', [['plan_to_watch','Plan to Watch'],['completed','Completed']], item.status, function(v, d){ updateItem(d.id,{status:v}); },{id:item.id})
+          : dropdown('status-dd', Object.entries(STATUSES).map(([k,v])=>[k,v]), item.status, function(v, d){ updateItem(d.id,{status:v}); },{id:item.id})
         }
         <button class="btn btn-ghost" style="padding:7px 14px" onclick="openEditModal('${esc(item.id)}')">${ic('pencil')} Edit</button>
         <button class="btn btn-ghost" style="padding:7px 14px;color:var(--danger,#ef4444)" onclick="deleteItem('${esc(item.id)}')">${ic('trash')}</button>
@@ -803,9 +806,9 @@ function openEditModal(id) {
       <div class="input-group"><label>Title</label><input class="input" id="e-title" value="${esc(item.title)}"/></div>
       <div class="input-group"><label>Status</label>
         ${item.type === 'movie'
-          ? dropdown('e-status-dd', [['plan_to_watch','Plan to Watch'],['completed','Completed']], item.status, function(v){ document.getElementById('e-status-val').value=v; }) + '<input type="hidden" id="e-status-val" value="' + item.status + '"/>'
-          : dropdown('e-status-dd', Object.entries(STATUSES).map(([k,v])=>[k,v]), item.status, function(v){ document.getElementById('e-status-val').value=v; }) + '<input type="hidden" id="e-status-val" value="' + item.status + '"/>'
-        }
+          ? dropdown('e-status-dd', [['plan_to_watch','Plan to Watch'],['completed','Completed']], item.status, function(v){ document.getElementById('e-status-val').value=v; })
+          : dropdown('e-status-dd', Object.entries(STATUSES).map(([k,v])=>[k,v]), item.status, function(v){ document.getElementById('e-status-val').value=v; })
+        }<input type="hidden" id="e-status-val" value="${esc(item.status)}"/>
       </div>
       <div class="input-group"><label>Your Rating (0\u201310)</label><input class="input" id="e-rating" type="number" min="0" max="10" step="0.1" value="${item.rating||''}"/></div>
       <div class="input-group"><label>Progress (%)</label><input class="input" id="e-progress" type="number" min="0" max="100" value="${item.progress||0}"/></div>
