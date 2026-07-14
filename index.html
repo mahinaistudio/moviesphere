@@ -44,6 +44,8 @@ nav{padding:10px;flex:1;overflow-y:auto;position:relative;z-index:1}
 select.input{cursor:pointer;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6680' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;background-color:var(--bg-input)}
 select.input option{background:rgba(16,16,24,0.97);color:var(--text-primary);padding:8px 12px;border:none;border-radius:var(--radius-sm)}
 .dropdown{position:relative;display:inline-block}
+.input-group .dropdown{width:100%}
+.input-group .dropdown .dropdown-btn{width:100%}
 .dropdown-btn{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-md);font-size:13px;font-weight:500;color:var(--text-primary);cursor:pointer;transition:all var(--transition-fast);min-width:140px;justify-content:space-between}
 .dropdown-btn:hover{border-color:var(--border-hover);background:rgba(255,255,255,0.06)}
 .dropdown-btn svg{width:14px;height:14px;color:var(--text-tertiary);transition:transform 0.2s}
@@ -837,9 +839,9 @@ function openEditModal(id) {
       <button onclick="document.getElementById('edit-modal').remove()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:20px">${ic('x')}</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
-      <div class="input-group"><label>Title</label><input class="input" id="e-title" value="${esc(item.title)}"/></div>
+      <div class="input-group"><label>Title</label><input class="input" id="e-title" value="${esc(item.title)}" placeholder="Enter title..."/></div>
       ${isManual ? `
-      <div class="input-group"><label>Your Rating (0\u201310)</label><input class="input" id="e-rating" type="number" min="0" max="10" step="0.1" value="${item.rating||''}"/></div>
+      <div class="input-group"><label>Your Rating (0\u201310)</label><input class="input" id="e-rating" type="number" min="0" max="10" step="0.1" value="${item.rating||''}" placeholder="0-10"/></div>
       ` : ''}
       <div class="input-group"><label>Comment</label><textarea class="input" id="e-comment" rows="3" placeholder="Personal notes about this item...">${esc(item.comment||'')}</textarea></div>
     </div>
@@ -869,7 +871,7 @@ async function saveEdit(id) {
 
 // â”€â”€ Page: Add Content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let addTab = 'import', importUrl = '', importStep = -1, importPreview = null, importErr = '';
-let manualForm = { title:'', type:'movie', status:'plan_to_watch', year:'', rating:'', progress:'0', posterUrl:'', backdropUrl:'', overview:'' };
+let manualForm = { title:'', type:'movie', status:'plan_to_watch', year:'', rating:'', progress:'0', posterUrl:'', backdropUrl:'', overview:'', runtime:'', country:'', language:'', genres:[] };
 
 const STEPS = ['Searching IMDb\u2026','Fetching Metadata\u2026','Downloading Posters\u2026','Creating Seasons\u2026','Building Episodes\u2026','Finishing Up\u2026','Done!'];
 let stepTimer = null;
@@ -909,14 +911,20 @@ async function saveImport() {
   }
 }
 
+function toggleManualGenre(g) {
+  const idx = manualForm.genres.indexOf(g);
+  if (idx >= 0) manualForm.genres.splice(idx, 1); else manualForm.genres.push(g);
+  render();
+}
+
 async function saveManual() {
   if (!manualForm.title.trim()) { toast('Title is required','err'); return; }
-  const newItem = { ...manualForm, id:uid(), year:manualForm.year?parseInt(manualForm.year):null, rating:manualForm.rating?parseFloat(manualForm.rating):null, progress:parseInt(manualForm.progress)||0, watchedEpisodes:0, genres:[], cast:[], tags:[], seasons:[], createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() };
+  const newItem = { ...manualForm, id:uid(), year:manualForm.year?parseInt(manualForm.year):null, rating:manualForm.rating?parseFloat(manualForm.rating):null, runtime:manualForm.runtime?parseInt(manualForm.runtime):null, progress:parseInt(manualForm.progress)||0, watchedEpisodes:0, cast:[], tags:[], seasons:[], createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() };
   try {
     await api('POST', '/api/items', newItem);
     state.items = [newItem, ...state.items];
     toast(`"${newItem.title}" added!`, 'ok');
-    manualForm = { title:'', type:'movie', status:'plan_to_watch', year:'', rating:'', progress:'0', posterUrl:'', backdropUrl:'', overview:'' };
+    manualForm = { title:'', type:'movie', status:'plan_to_watch', year:'', rating:'', progress:'0', posterUrl:'', backdropUrl:'', overview:'', runtime:'', country:'', language:'', genres:[] };
     navigate('detail', { detailId: newItem.id });
   } catch (e) {
     toast('Failed to save: ' + e.message, 'err');
@@ -988,16 +996,31 @@ function renderAdd() {
   <div class="card" style="padding:24px">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
       <div class="input-group" style="grid-column:1/-1"><label>Title *</label>
-        <input class="input" value="${esc(manualForm.title)}" oninput="manualForm.title=this.value"/>
+        <input class="input" value="${esc(manualForm.title)}" oninput="manualForm.title=this.value" placeholder="Enter title..."/>
       </div>
       <div class="input-group" style="grid-column:1/-1"><label>Type</label>
         ${dropdown('manual-type-dd', Object.entries(TYPES).map(([k,v])=>[k,v.label]), manualForm.type, function(v){ manualForm.type=v; if(manualForm.status==='watching'&&v==='movie') manualForm.status='plan_to_watch'; render(); })}
       </div>
-      <div class="input-group"><label>Year</label><input class="input" type="number" value="${manualForm.year}" oninput="manualForm.year=this.value"/></div>
-      <div class="input-group"><label>Rating (0\u201310)</label><input class="input" type="number" min="0" max="10" step="0.1" value="${manualForm.rating}" oninput="manualForm.rating=this.value"/></div>
-      <div class="input-group" style="grid-column:1/-1"><label>Poster URL</label><input class="input" type="url" value="${manualForm.posterUrl}" oninput="manualForm.posterUrl=this.value"/></div>
-      <div class="input-group" style="grid-column:1/-1"><label>Banner URL</label><input class="input" type="url" value="${manualForm.backdropUrl}" oninput="manualForm.backdropUrl=this.value" placeholder="Optional backdrop/banner image URL"/></div>
-      <div class="input-group" style="grid-column:1/-1"><label>Overview</label><textarea class="input" rows="3" oninput="manualForm.overview=this.value">${esc(manualForm.overview)}</textarea></div>
+      <div class="input-group"><label>Year</label><input class="input" type="number" value="${manualForm.year}" oninput="manualForm.year=this.value" placeholder="e.g. 2024"/></div>
+      ${manualForm.type === 'movie' ? `<div class="input-group"><label>Runtime (min)</label><input class="input" type="number" value="${manualForm.runtime}" oninput="manualForm.runtime=this.value" placeholder="e.g. 120"/></div>` : ''}
+      <div class="input-group"><label>Rating (0\u201310)</label><input class="input" type="number" min="0" max="10" step="0.1" value="${manualForm.rating}" oninput="manualForm.rating=this.value" placeholder="e.g. 8.5"/></div>
+      <div class="input-group"><label>Language</label>
+        ${dropdown('manual-lang-dd', [['','— Select —'],['en','English'],['ja','Japanese'],['ko','Korean'],['es','Spanish'],['fr','French'],['de','German'],['zh','Chinese'],['hi','Hindi'],['pt','Portuguese'],['ru','Russian'],['it','Italian'],['th','Thai'],['tr','Turkish'],['ar','Arabic'],['other','Other']], manualForm.language, function(v){ manualForm.language=v; render(); })}
+      </div>
+      <div class="input-group"><label>Country</label>
+        ${dropdown('manual-country-dd', [['','— Select —'],['US','United States'],['JP','Japan'],['KR','South Korea'],['GB','United Kingdom'],['IN','India'],['FR','France'],['DE','Germany'],['CN','China'],['BR','Brazil'],['CA','Canada'],['AU','Australia'],['ES','Spain'],['IT','Italy'],['MX','Mexico'],['OTHER','Other']], manualForm.country, function(v){ manualForm.country=v; render(); })}
+      </div>
+      <div class="input-group" style="grid-column:1/-1"><label>Genres</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${['Action','Adventure','Animation','Comedy','Crime','Documentary','Drama','Family','Fantasy','History','Horror','Music','Mystery','Romance','Sci-Fi','Thriller','War','Western'].map(g => {
+            const sel = manualForm.genres.includes(g);
+            return `<button type="button" class="chip" onclick="toggleManualGenre('${g}')" style="${sel?'background:var(--accent);color:#fff;border-color:var(--accent)':''}">${esc(g)}</button>`;
+          }).join('')}
+        </div>
+      </div>
+      <div class="input-group" style="grid-column:1/-1"><label>Poster URL</label><input class="input" type="url" value="${manualForm.posterUrl}" oninput="manualForm.posterUrl=this.value" placeholder="Paste poster image URL..."/></div>
+      <div class="input-group" style="grid-column:1/-1"><label>Banner URL</label><input class="input" type="url" value="${manualForm.backdropUrl}" oninput="manualForm.backdropUrl=this.value" placeholder="Paste backdrop/banner image URL..."/></div>
+      <div class="input-group" style="grid-column:1/-1"><label>Overview</label><textarea class="input" rows="3" oninput="manualForm.overview=this.value" placeholder="Write a brief description...">${esc(manualForm.overview)}</textarea></div>
     </div>
     <div style="display:flex;justify-content:flex-end;margin-top:18px">
       <button class="btn btn-primary" onclick="saveManual()">${ic('check')} Save to Library</button>
@@ -1174,7 +1197,6 @@ function renderCollectionDetail() {
       </div>
       <div style="margin-top:12px;display:flex;gap:8px">
         <button class="btn btn-primary" onclick="openAddToCollectionModal('${esc(coll.name)}')">${ic('add')} Add Content</button>
-        <button class="btn btn-ghost" onclick="openEditCollModal('${esc(coll.name)}')">${ic('edit')} Edit Details</button>
       </div>
     </div>
   </div>
@@ -1276,7 +1298,7 @@ function openRenameCollModal(name) {
       <h2 style="font-weight:700;font-size:18px">${ic('pencil')} Rename Collection</h2>
       <button onclick="document.getElementById('coll-modal').remove()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:20px">${ic('x')}</button>
     </div>
-    <div class="input-group"><label>New Name</label><input class="input" id="coll-rename" value="${esc(name)}"/></div>
+    <div class="input-group"><label>New Name</label><input class="input" id="coll-rename" value="${esc(name)}" placeholder="Enter new name..."/></div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
       <button class="btn btn-ghost" onclick="document.getElementById('coll-modal').remove()">Cancel</button>
       <button class="btn btn-primary" onclick="saveRenameCollection('${esc(name)}')">${ic('check')} Rename</button>
@@ -1364,8 +1386,8 @@ function renderSettings() {
     <h2 style="font-weight:700;font-size:16px;margin-bottom:4px">${ic('link')} API Keys</h2>
     <p style="font-size:13px;color:#6b7280;margin-bottom:18px">Get your own free keys at themoviedb.org and omdbapi.com.</p>
     <div style="display:flex;flex-direction:column;gap:12px">
-      <div class="input-group"><label>TMDb API Key</label><input class="input" id="sk-tmdb" value="${esc(state.keys.tmdb)}"/></div>
-      <div class="input-group"><label>OMDb API Key</label><input class="input" id="sk-omdb" value="${esc(state.keys.omdb)}"/></div>
+<div class="input-group"><label>TMDb API Key</label><input class="input" id="sk-tmdb" value="${esc(state.keys.tmdb)}" placeholder="Enter TMDb API key..."/></div>
+        <div class="input-group"><label>OMDb API Key</label><input class="input" id="sk-omdb" value="${esc(state.keys.omdb)}" placeholder="Enter OMDb API key..."/></div>
       <div><button class="btn btn-primary" onclick="saveKeys()">${ic('check')} Save Keys</button></div>
     </div>
   </div>
