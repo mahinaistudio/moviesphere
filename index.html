@@ -816,7 +816,7 @@ async function toggleEp(itemId, si, ei) {
   const total   = seasons.reduce((a,s)=>a+s.episodes.length,0);
   const watched = seasons.reduce((a,s)=>a+s.episodes.filter(e=>e.watched).length,0);
   const progress= total>0 ? Math.round(watched/total*100) : x.progress;
-  const status  = progress>=100 ? 'completed' : (x.status==='completed' ? 'completed' : (progress>0&&x.status==='plan_to_watch'?(x.type==='movie'?'plan_to_watch':'watching'):x.status));
+  const status = progress >= 100 ? 'completed' : (progress > 0 ? (x.type === 'movie' ? 'plan_to_watch' : 'watching') : 'plan_to_watch');
   const ep = seasons[si].episodes[ei];
   const updated = { ...x, seasons, watchedEpisodes:watched, progress, status, updatedAt:new Date().toISOString() };
   const newItems = [...state.items];
@@ -855,7 +855,7 @@ async function toggleSeason(itemId, si) {
   const total   = seasons.reduce((a,s)=>a+s.episodes.length,0);
   const watched = seasons.reduce((a,s)=>a+s.episodes.filter(e=>e.watched).length,0);
   const progress= total>0 ? Math.round(watched/total*100) : x.progress;
-  const status  = progress>=100 ? 'completed' : (x.status==='completed' ? 'completed' : (progress>0&&x.status==='plan_to_watch'?(x.type==='movie'?'plan_to_watch':'watching'):x.status));
+  const status = progress >= 100 ? 'completed' : (progress > 0 ? (x.type === 'movie' ? 'plan_to_watch' : 'watching') : 'plan_to_watch');
   const updated = { ...x, seasons, watchedEpisodes:watched, progress, status, updatedAt:new Date().toISOString() };
   const newItems = [...state.items];
   newItems[idx] = updated;
