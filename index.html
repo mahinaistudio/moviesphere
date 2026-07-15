@@ -724,8 +724,8 @@ function renderDetail() {
     <div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px">
         ${item.type === 'movie'
-          ? dropdown('status-dd', [['plan_to_watch','Plan to Watch'],['completed','Completed']], item.status, function(v, d){ updateItem(d.id,{status:v}); },{id:item.id})
-          : dropdown('status-dd', Object.entries(STATUSES).map(([k,v])=>[k,v]), item.status, function(v, d){ updateItem(d.id,{status:v}); },{id:item.id})
+          ? dropdown('status-dd', [['plan_to_watch','Plan to Watch'],['completed','Completed']], item.status, function(v, d){ changeStatus(d.id, v); },{id:item.id})
+          : dropdown('status-dd', Object.entries(STATUSES).map(([k,v])=>[k,v]), item.status, function(v, d){ changeStatus(d.id, v); },{id:item.id})
         }
         <button class="btn btn-ghost" style="padding:7px 14px" onclick="openEditModal('${esc(item.id)}')">${ic('pencil')} Edit</button>
         <button class="btn btn-ghost" style="padding:7px 14px;color:var(--danger,#ef4444)" onclick="deleteItem('${esc(item.id)}')">${ic('trash')}</button>
@@ -803,6 +803,36 @@ async function updateItem(id, patch) {
   state.items = state.items.map(x => x.id===id ? {...x, ...patch, updatedAt: new Date().toISOString()} : x);
   try { await api('PATCH', '/api/items/' + id, patch); } catch(e) { console.error(e); }
   render();
+}
+
+async function changeStatus(id, newStatus) {
+  const idx = state.items.findIndex(x => x.id === id);
+  if (idx < 0) return;
+  const x = state.items[idx];
+  if (!x.seasons || !x.seasons.length) {
+    state.items[idx] = { ...x, status: newStatus, updatedAt: new Date().toISOString() };
+    render();
+    await api('PATCH', '/api/items/' + id, { status: newStatus });
+    return;
+  }
+  const newVal = newStatus === 'completed' ? true : (newStatus === 'plan_to_watch' ? false : null);
+  if (newVal === null) {
+    state.items[idx] = { ...x, status: newStatus, updatedAt: new Date().toISOString() };
+    render();
+    await api('PATCH', '/api/items/' + id, { status: newStatus });
+    return;
+  }
+  const seasons = x.seasons.map(s => ({
+    ...s,
+    episodes: s.episodes.map(ep => ({ ...ep, watched: newVal }))
+  }));
+  const total = seasons.reduce((a,s) => a + s.episodes.length, 0);
+  const watched = seasons.reduce((a,s) => a + s.episodes.filter(e => e.watched).length, 0);
+  const progress = total > 0 ? Math.round(watched / total * 100) : 0;
+  const updated = { ...x, seasons, watchedEpisodes: watched, progress, status: newStatus, updatedAt: new Date().toISOString() };
+  state.items[idx] = updated;
+  render();
+  await api('PATCH', '/api/items/' + id, { seasons, watchedEpisodes: watched, progress, status: newStatus });
 }
 
 async function toggleEp(itemId, si, ei) {
