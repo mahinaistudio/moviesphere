@@ -50,7 +50,7 @@ select.input option{background:rgba(16,16,24,0.97);color:var(--text-primary);pad
 .dropdown-btn:hover{border-color:var(--border-hover);background:rgba(255,255,255,0.06)}
 .dropdown-btn svg{width:14px;height:14px;color:var(--text-tertiary);transition:transform 0.2s}
 .dropdown.open .dropdown-btn svg{transform:rotate(180deg)}
-.dropdown-menu{position:absolute;top:calc(100% + 4px);left:0;background:rgba(16,16,24,0.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:4px;z-index:9999;box-shadow:var(--shadow-lg);animation:dropdownIn 0.15s ease;display:none;min-width:100%}
+.dropdown-menu{position:absolute;top:calc(100% + 4px);left:0;background:rgba(16,16,24,0.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:4px;z-index:9999;box-shadow:var(--shadow-lg);animation:dropdownIn 0.15s ease;display:none;min-width:220px;max-height:320px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.15) transparent}
 .dropdown.open .dropdown-menu{display:block}
 .dropdown-item{padding:8px 14px;border-radius:var(--radius-sm);font-size:13px;color:var(--text-secondary);cursor:pointer;transition:all var(--transition-fast);display:block;width:100%;text-align:left;border:none;background:none}
 .dropdown-item:hover{background:rgba(255,255,255,0.06);color:var(--text-primary)}
@@ -438,6 +438,59 @@ const STATUSES = {
 const STATUS_COLOR = {
   watching:'var(--accent)', completed:'var(--success)', plan_to_watch:'var(--info,#2563eb)'
 };
+const COUNTRIES = [
+  ['','— Select —'],['AF','Afghanistan'],['AL','Albania'],['DZ','Algeria'],['AD','Andorra'],['AO','Angola'],
+  ['AG','Antigua and Barbuda'],['AR','Argentina'],['AM','Armenia'],['AU','Australia'],['AT','Austria'],['AZ','Azerbaijan'],
+  ['BS','Bahamas'],['BH','Bahrain'],['BD','Bangladesh'],['BB','Barbados'],['BY','Belarus'],['BE','Belgium'],
+  ['BZ','Belize'],['BJ','Benin'],['BT','Bhutan'],['BO','Bolivia'],['BA','Bosnia and Herzegovina'],['BW','Botswana'],
+  ['BR','Brazil'],['BN','Brunei'],['BG','Bulgaria'],['BF','Burkina Faso'],['BI','Burundi'],['KH','Cambodia'],
+  ['CM','Cameroon'],['CA','Canada'],['CV','Cape Verde'],['CF','Central African Republic'],['TD','Chad'],['CL','Chile'],
+  ['CN','China'],['CO','Colombia'],['KM','Comoros'],['CG','Congo'],['CR','Costa Rica'],['HR','Croatia'],
+  ['CU','Cuba'],['CY','Cyprus'],['CZ','Czech Republic'],['DK','Denmark'],['DJ','Djibouti'],['DM','Dominica'],
+  ['DO','Dominican Republic'],['EC','Ecuador'],['EG','Egypt'],['SV','El Salvador'],['GQ','Equatorial Guinea'],
+  ['ER','Eritrea'],['EE','Estonia'],['ET','Ethiopia'],['FJ','Fiji'],['FI','Finland'],['FR','France'],
+  ['GA','Gabon'],['GM','Gambia'],['GE','Georgia'],['DE','Germany'],['GH','Ghana'],['GR','Greece'],
+  ['GD','Grenada'],['GT','Guatemala'],['GN','Guinea'],['GW','Guinea-Bissau'],['GY','Guyana'],['HT','Haiti'],
+  ['HN','Honduras'],['HU','Hungary'],['IS','Iceland'],['IN','India'],['ID','Indonesia'],['IR','Iran'],
+  ['IQ','Iraq'],['IE','Ireland'],['IL','Israel'],['IT','Italy'],['CI','Ivory Coast'],['JM','Jamaica'],
+  ['JP','Japan'],['JO','Jordan'],['KZ','Kazakhstan'],['KE','Kenya'],['KI','Kiribati'],['KP','North Korea'],
+  ['KR','South Korea'],['KW','Kuwait'],['KG','Kyrgyzstan'],['LA','Laos'],['LB','Lebanon'],['LS','Lesotho'],
+  ['LR','Liberia'],['LY','Libya'],['LI','Liechtenstein'],['LT','Lithuania'],['LU','Luxembourg'],['MG','Madagascar'],
+  ['MW','Malawi'],['MY','Malaysia'],['MV','Maldives'],['ML','Mali'],['MT','Malta'],['MH','Marshall Islands'],
+  ['MR','Mauritania'],['MU','Mauritius'],['MX','Mexico'],['FM','Micronesia'],['MD','Moldova'],['MC','Monaco'],
+  ['MN','Mongolia'],['ME','Montenegro'],['MA','Morocco'],['MZ','Mozambique'],['MM','Myanmar'],['NA','Namibia'],
+  ['NR','Nauru'],['NP','Nepal'],['NL','Netherlands'],['NZ','New Zealand'],['NI','Nicaragua'],['NE','Niger'],
+  ['NG','Nigeria'],['MK','North Macedonia'],['NO','Norway'],['OM','Oman'],['PK','Pakistan'],['PW','Palau'],
+  ['PS','Palestine'],['PA','Panama'],['PG','Papua New Guinea'],['PY','Paraguay'],['PE','Peru'],['PH','Philippines'],
+  ['PL','Poland'],['PT','Portugal'],['QA','Qatar'],['RO','Romania'],['RU','Russia'],['RW','Rwanda'],
+  ['KN','Saint Kitts and Nevis'],['LC','Saint Lucia'],['VC','Saint Vincent and the Grenadines'],['WS','Samoa'],['SM','San Marino'],
+  ['ST','Sao Tome and Principe'],['SA','Saudi Arabia'],['SN','Senegal'],['RS','Serbia'],
+  ['SC','Seychelles'],['SL','Sierra Leone'],['SG','Singapore'],['SK','Slovakia'],['SI','Slovenia'],['SB','Solomon Islands'],
+  ['SO','Somalia'],['ZA','South Africa'],['SS','South Sudan'],['ES','Spain'],['LK','Sri Lanka'],['SD','Sudan'],
+  ['SR','Suriname'],['SZ','Eswatini'],['SE','Sweden'],['CH','Switzerland'],['SY','Syria'],['TW','Taiwan'],
+  ['TJ','Tajikistan'],['TZ','Tanzania'],['TH','Thailand'],['TL','East Timor'],['TG','Togo'],['TO','Tonga'],
+  ['TT','Trinidad and Tobago'],['TN','Tunisia'],['TR','Turkey'],['TM','Turkmenistan'],['TV','Tuvalu'],['UG','Uganda'],
+  ['UA','Ukraine'],['AE','United Arab Emirates'],['GB','United Kingdom'],['US','United States'],['UY','Uruguay'],
+  ['UZ','Uzbekistan'],['VU','Vanuatu'],['VE','Venezuela'],['VN','Vietnam'],['YE','Yemen'],['ZM','Zambia'],['ZW','Zimbabwe'],
+];
+const LANGUAGES = [
+  ['','— Select —'],['af','Afrikaans'],['sq','Albanian'],['am','Amharic'],['ar','Arabic'],['hy','Armenian'],
+  ['az','Azerbaijani'],['eu','Basque'],['be','Belarusian'],['bn','Bengali'],['bs','Bosnian'],['bg','Bulgarian'],
+  ['my','Burmese'],['ca','Catalan'],['zh','Chinese'],['hr','Croatian'],['cs','Czech'],['da','Danish'],
+  ['nl','Dutch'],['en','English'],['eo','Esperanto'],['et','Estonian'],['fi','Finnish'],['fr','French'],
+  ['gl','Galician'],['ka','Georgian'],['de','German'],['el','Greek'],['gu','Gujarati'],['ht','Haitian Creole'],
+  ['ha','Hausa'],['he','Hebrew'],['hi','Hindi'],['hu','Hungarian'],['is','Icelandic'],['id','Indonesian'],
+  ['ga','Irish'],['it','Italian'],['ja','Japanese'],['jv','Javanese'],['kn','Kannada'],['kk','Kazakh'],
+  ['km','Khmer'],['ko','Korean'],['ku','Kurdish'],['ky','Kyrgyz'],['lo','Lao'],['lv','Latvian'],
+  ['lt','Lithuanian'],['mk','Macedonian'],['ms','Malay'],['ml','Malayalam'],['mt','Maltese'],['mi','Maori'],
+  ['mr','Marathi'],['mn','Mongolian'],['ne','Nepali'],['no','Norwegian'],['or','Odia'],['ps','Pashto'],
+  ['fa','Persian'],['pl','Polish'],['pt','Portuguese'],['pa','Punjabi'],['ro','Romanian'],['ru','Russian'],
+  ['sm','Samoan'],['sr','Serbian'],['sn','Shona'],['sd','Sindhi'],['si','Sinhala'],['sk','Slovak'],
+  ['sl','Slovenian'],['so','Somali'],['es','Spanish'],['su','Sundanese'],['sw','Swahili'],['sv','Swedish'],
+  ['tg','Tajik'],['ta','Tamil'],['tt','Tatar'],['te','Telugu'],['th','Thai'],['tr','Turkish'],
+  ['tk','Turkmen'],['uk','Ukrainian'],['ur','Urdu'],['ug','Uyghur'],['uz','Uzbek'],['vi','Vietnamese'],
+  ['cy','Welsh'],['xh','Xhosa'],['yi','Yiddish'],['yo','Yoruba'],['zu','Zulu'],
+];
 
 function typeBadge(type) {
   const t = TYPES[type] || { label: type, css:'', icon:'film' };
@@ -1009,10 +1062,10 @@ function renderAdd() {
       ${manualForm.type === 'movie' ? `<div class="input-group"><label>Runtime (min)</label><input class="input" type="number" value="${manualForm.runtime}" oninput="manualForm.runtime=this.value" placeholder="e.g. 120"/></div>` : ''}
       <div class="input-group"><label>Rating (0\u201310)</label><input class="input" type="number" min="0" max="10" step="0.1" value="${manualForm.rating}" oninput="manualForm.rating=this.value" placeholder="e.g. 8.5"/></div>
       <div class="input-group"><label>Language</label>
-        ${dropdown('manual-lang-dd', [['','— Select —'],['en','English'],['ja','Japanese'],['ko','Korean'],['es','Spanish'],['fr','French'],['de','German'],['zh','Chinese'],['hi','Hindi'],['pt','Portuguese'],['ru','Russian'],['it','Italian'],['th','Thai'],['tr','Turkish'],['ar','Arabic'],['other','Other']], manualForm.language, function(v){ manualForm.language=v; render(); })}
+        ${dropdown('manual-lang-dd', LANGUAGES, manualForm.language, function(v){ manualForm.language=v; render(); })}
       </div>
       <div class="input-group"><label>Country</label>
-        ${dropdown('manual-country-dd', [['','— Select —'],['US','United States'],['JP','Japan'],['KR','South Korea'],['GB','United Kingdom'],['IN','India'],['FR','France'],['DE','Germany'],['CN','China'],['BR','Brazil'],['CA','Canada'],['AU','Australia'],['ES','Spain'],['IT','Italy'],['MX','Mexico'],['OTHER','Other']], manualForm.country, function(v){ manualForm.country=v; render(); })}
+        ${dropdown('manual-country-dd', COUNTRIES, manualForm.country, function(v){ manualForm.country=v; render(); })}
       </div>
       <div class="input-group" style="grid-column:1/-1"><label>Genres</label>
         <div style="display:flex;flex-wrap:wrap;gap:6px">
