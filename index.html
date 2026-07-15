@@ -582,9 +582,8 @@ function renderDashboard() {
   </div>
   <div>
     <div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="margin-bottom:14px">
         <h2 style="font-size:15px;font-weight:700">${ic('play')} Continue Watching</h2>
-        <button onclick="navigate('library')" style="background:none;border:none;color:var(--accent,#7c3aed);font-size:13px;font-weight:600;cursor:pointer">View Library ${ic('chevronDown')}</button>
       </div>
       ${watching.length===0
         ? `<div class="card" style="padding:36px;text-align:center;color:#6b7280;font-size:14px">No items currently watching.</div>`
