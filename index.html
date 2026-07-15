@@ -697,9 +697,9 @@ function renderDetail() {
           </button>
         </div>
         ${detailExpanded===s.seasonNum ? `
-        <div style="border-top:1px solid #1a1a2e;padding:8px 0">
+        <div style="border-top:1px solid #1a1a2e;padding:8px 0 8px 24px">
           ${s.episodes.map((ep,ei)=>`
-          <div class="ep-row" data-ep="${esc(item.id)}-${si}-${ei}" onclick="toggleEp('${esc(item.id)}',${si},${ei})">
+          <div class="ep-row" data-ep="${esc(item.id)}-${si}-${ei}" onclick="toggleEp('${esc(item.id)}',${si},${ei})" style="margin-left:4px">
             <div class="ep-check${ep.watched?' done':''}">${ep.watched?ic('check'):''}</div>
             <span style="font-size:12px;color:#6b7280;min-width:34px">E${ep.episodeNum}</span>
             <span style="flex:1;font-size:13px;font-weight:500;color:${ep.watched?'#6b7280':'#f8f8ff'};text-decoration:${ep.watched?'line-through':'none'}">${esc(ep.name||'Episode '+ep.episodeNum)}</span>
