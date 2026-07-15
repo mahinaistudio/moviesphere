@@ -357,7 +357,7 @@ function dropdown(id, options, selected, onChangeFn, data) {
   const ddId = id + '_' + (++_ddIdCounter);
   _ddCallbacks[ddId] = onChangeFn;
   if (data) _ddData[ddId] = data;
-  const label = options.find(o => o[0] === selected)?.[1] || selected;
+  const label = options.find(o => o[0] === selected)?.[1] || (typeof STATUSES !== 'undefined' && STATUSES[selected]) || selected.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
   const dataAttr = data ? Object.entries(data).map(([k,v])=>` data-${k}="${esc(v)}"`).join('') : '';
   return `<div class="dropdown" id="${ddId}"${dataAttr}>
     <button class="dropdown-btn" onclick="toggleDropdown(event,'${ddId}')">
