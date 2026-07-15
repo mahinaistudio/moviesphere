@@ -1245,9 +1245,6 @@ function collectionsListHTML() {
             ${extra > 0 ? `<span class="coll-tag">+${extra} more</span>` : ''}
           </div>
         </div>
-        <div class="coll-menu" onclick="event.stopPropagation()">
-          <button class="coll-menu-btn" data-name="${esc(c.name)}" onclick="toggleCollMenu(this)">${ic('dots')}</button>
-        </div>
       </div>`;
     }).join('')}
   </div>`;
@@ -1284,6 +1281,8 @@ function renderCollectionDetail() {
       </div>
       <div style="margin-top:12px;display:flex;gap:8px">
         <button class="btn btn-primary" onclick="openAddToCollectionModal('${esc(coll.name)}')">${ic('add')} Add Content</button>
+        <button class="btn btn-ghost" onclick="openEditCollModal('${esc(coll.name)}')">${ic('pencil')} Edit</button>
+        <button class="btn btn-ghost" style="color:var(--danger,#ef4444)" onclick="deleteCollection('${esc(coll.name)}')">${ic('trash')}</button>
       </div>
     </div>
   </div>
@@ -1420,6 +1419,7 @@ function openEditCollModal(name) {
       <button onclick="document.getElementById('coll-modal').remove()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:20px">${ic('x')}</button>
     </div>
     <div class="input-group"><label>Description</label><textarea class="input" id="coll-edit-desc" rows="3">${esc(coll?.description || '')}</textarea></div>
+    <div class="input-group" style="margin-top:12px"><label>Banner URL</label><input class="input" id="coll-edit-banner" type="url" value="${esc(coll?.bannerUrl || '')}" placeholder="Paste banner image URL..."/></div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
       <button class="btn btn-ghost" onclick="document.getElementById('coll-modal').remove()">Cancel</button>
       <button class="btn btn-primary" onclick="saveEditCollection('${esc(name)}')">${ic('check')} Save</button>
@@ -1432,7 +1432,8 @@ function openEditCollModal(name) {
 
 async function saveEditCollection(name) {
   const desc = document.getElementById('coll-edit-desc').value.trim();
-  await api('PUT', '/api/collections/' + encodeURIComponent(name), { description: desc });
+  const bannerUrl = document.getElementById('coll-edit-banner').value.trim() || null;
+  await api('PUT', '/api/collections/' + encodeURIComponent(name), { description: desc, bannerUrl });
   document.getElementById('coll-modal')?.remove();
   await reloadAll();
   toast('Collection updated!');
