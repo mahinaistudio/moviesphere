@@ -725,7 +725,7 @@ function renderDetail() {
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px">
         ${item.type === 'movie'
           ? dropdown('status-dd', [['plan_to_watch','Plan to Watch'],['completed','Completed']], item.status, function(v, d){ changeStatus(d.id, v); },{id:item.id})
-          : dropdown('status-dd', Object.entries(STATUSES).map(([k,v])=>[k,v]), item.status, function(v, d){ changeStatus(d.id, v); },{id:item.id})
+          : dropdown('status-dd', [['plan_to_watch','Plan to Watch'],['completed','Completed']], item.status, function(v, d){ changeStatus(d.id, v); },{id:item.id})
         }
         <button class="btn btn-ghost" style="padding:7px 14px" onclick="openEditModal('${esc(item.id)}')">${ic('pencil')} Edit</button>
         <button class="btn btn-ghost" style="padding:7px 14px;color:var(--danger,#ef4444)" onclick="deleteItem('${esc(item.id)}')">${ic('trash')}</button>
