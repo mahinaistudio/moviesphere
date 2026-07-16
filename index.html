@@ -79,7 +79,7 @@ textarea.input{resize:vertical}
 .poster-card::before{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(135deg,rgba(255,255,255,0.02) 0%,transparent 100%);pointer-events:none;z-index:1}
 .poster-card:hover{transform:translateY(-6px) scale(1.01);border-color:rgba(139,92,246,0.25);box-shadow:0 20px 50px rgba(0,0,0,0.4),0 0 40px rgba(139,92,246,0.08)}
 .poster-img{aspect-ratio:2/3;background:var(--bg-tertiary);position:relative;overflow:hidden;flex-shrink:0}
-.poster-img img{width:100%;height:100%;object-fit:cover;object-position:top center;transition:transform 0.5s cubic-bezier(0.4,0,0.2,1)}.poster-card:hover .poster-img img{transform:scale(1.05)}
+.poster-img img{width:100%;height:100%;object-fit:cover;transition:transform 0.5s cubic-bezier(0.4,0,0.2,1)}.poster-card:hover .poster-img img{transform:scale(1.05)}
 .no-poster{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(139,92,246,0.05),rgba(168,85,247,0.02))}.no-poster svg{width:32px;height:32px;color:var(--text-muted);opacity:0.5}
 .poster-badges{position:absolute;top:8px;left:8px;right:8px;display:flex;justify-content:space-between;align-items:flex-start;z-index:3}
 .poster-rating{background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-sm);padding:3px 8px;font-size:11px;font-weight:700;color:#FBBF24;display:flex;align-items:center;gap:3px}.poster-rating svg{width:12px;height:12px}
@@ -105,8 +105,8 @@ textarea.input{resize:vertical}
 .spin{animation:spin 1s linear infinite;display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.15);border-top-color:var(--accent);border-radius:50%}
 .lh{line-height:1.7;color:var(--text-secondary);font-size:14px}
 .section-title{font-family:var(--font-heading);font-weight:700;font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px}
-.backdrop-wrapper{width:100%;height:300px;position:relative;overflow:hidden;border-radius:var(--radius-xl);margin-bottom:0}.backdrop-wrapper img{width:100%;height:100%;object-fit:cover;object-position:top center}
-.backdrop-gradient{position:absolute;inset:0;background:linear-gradient(to top,var(--bg-primary) 0%,rgba(7,7,11,0.4) 45%,transparent 100%),linear-gradient(to right,var(--bg-primary) 0%,transparent 50%)}
+.backdrop-wrapper{width:100%;height:300px;position:relative;overflow:hidden;border-radius:var(--radius-xl);margin-bottom:0}.backdrop-wrapper img{width:100%;height:100%;object-fit:cover}
+.backdrop-gradient{position:absolute;inset:0;background:linear-gradient(to top,var(--bg-primary) 0%,rgba(7,7,11,0.4) 45%,transparent 100%)}
 .detail-hero{display:flex;gap:24px;align-items:flex-end;margin-top:-80px;padding:0;position:relative;z-index:5}
 .detail-poster{width:120px;height:178px;border-radius:var(--radius-lg);overflow:hidden;border:2px solid rgba(255,255,255,0.08);background:var(--bg-tertiary);flex-shrink:0;box-shadow:0 12px 40px rgba(0,0,0,0.5),0 0 30px rgba(139,92,246,0.1);transition:all var(--transition-normal)}.detail-poster:hover{box-shadow:0 16px 50px rgba(0,0,0,0.6),0 0 40px rgba(139,92,246,0.15);transform:translateY(-4px)}.detail-poster img{width:100%;height:100%;object-fit:cover}
 .detail-title{padding-bottom:8px}.detail-title h1{font-family:var(--font-heading);font-size:28px;font-weight:800;line-height:1.15;margin-bottom:10px;letter-spacing:-0.02em}
@@ -135,7 +135,7 @@ textarea.input{resize:vertical}
 .coll-empty h2{font-family:var(--font-heading);font-size:26px;font-weight:700;margin-bottom:8px}.coll-empty p{color:var(--text-tertiary);font-size:14px;max-width:420px;margin:0 auto 28px;line-height:1.6}
 .coll-detail{animation:pageIn 0.3s ease}.coll-detail-back{display:inline-flex;align-items:center;gap:6px;color:var(--text-secondary);background:none;cursor:pointer;font-size:13px;font-weight:500;margin-bottom:20px;transition:color var(--transition-fast);padding:0}.coll-detail-back svg{width:16px;height:16px}.coll-detail-back:hover{color:var(--text-primary)}
 .detail-back-float{position:absolute;top:16px;left:16px;z-index:10;display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-full);background:rgba(0,0,0,0.45);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);color:var(--text-secondary);font-size:13px;font-weight:500;cursor:pointer;transition:all var(--transition-fast)}.detail-back-float svg{width:16px;height:16px}.detail-back-float:hover{background:rgba(0,0,0,0.65);color:var(--text-primary);border-color:rgba(255,255,255,0.15)}
-.coll-detail-hero{height:300px;position:relative;overflow:hidden;border-radius:var(--radius-xl);margin-bottom:28px}.coll-detail-hero img{width:100%;height:100%;object-fit:cover;object-position:top center}.coll-detail-hero-fallback{width:100%;height:100%;background:linear-gradient(135deg,var(--bg-tertiary),var(--bg-secondary),var(--bg-tertiary))}.coll-detail-hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,var(--bg-primary) 0%,rgba(7,7,11,0.3) 50%,transparent 100%)}
+.coll-detail-hero{height:300px;position:relative;overflow:hidden;border-radius:var(--radius-xl);margin-bottom:28px}.coll-detail-hero img{width:100%;height:100%;object-fit:cover}.coll-detail-hero-fallback{width:100%;height:100%;background:linear-gradient(135deg,var(--bg-tertiary),var(--bg-secondary),var(--bg-tertiary))}.coll-detail-hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,var(--bg-primary) 0%,rgba(7,7,11,0.3) 50%,transparent 100%)}
 .coll-detail-hero-content{position:absolute;bottom:28px;left:32px;right:32px}.coll-detail-hero-title{font-family:var(--font-heading);font-size:36px;font-weight:800;margin-bottom:8px;line-height:1.12;letter-spacing:-0.02em}.coll-detail-hero-meta{font-size:14px;color:var(--text-secondary);display:flex;align-items:center;gap:12px}
 .dash-grid{display:grid;grid-template-columns:1fr 340px;gap:24px}@media(max-width:900px){.dash-grid{grid-template-columns:1fr}}
 .stat-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-lg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);padding:18px 20px;display:flex;align-items:center;gap:16px;transition:all var(--transition-normal);position:relative;overflow:hidden}.stat-card:hover{transform:translateY(-2px);border-color:var(--border-hover);box-shadow:var(--shadow-md)}
@@ -618,7 +618,7 @@ function renderDashboard() {
             </div>
             <div style="flex:1;min-width:0">
               <div style="font-weight:600;font-size:13px;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(item.title)}">${esc(item.title)}</div>
-              <div style="font-size:11px;color:#6b7280;margin-bottom:6px">${item.year||'\u2014'}${item.tmdbRating ? ` \u00b7 ${ic('star')} ${item.tmdbRating}` : ''}</div>
+              <div style="font-size:11px;color:#6b7280;margin-bottom:6px">${item.year||'\u2014'}${(item.tmdbRating||item.rating) ? ` \u00b7 ${ic('star')} ${item.tmdbRating||item.rating}` : ''}</div>
               ${typeBadge(item.type)}
             </div>
           </div>
@@ -672,7 +672,7 @@ function libraryListHTML() {
             <div class="poster-img">
               ${item.posterUrl ? `<img src="${esc(item.posterUrl)}" alt="${esc(item.title)}" loading="lazy"/>` : `<div class="no-poster">${ic('film')}</div>`}
               <div class="poster-badges">${typeBadge(item.type)}</div>
-              ${item.tmdbRating ? `<div class="poster-rating">${ic('star')} ${item.tmdbRating}</div>` : ''}
+              ${(item.tmdbRating||item.rating) ? `<div class="poster-rating">${ic('star')} ${item.tmdbRating||item.rating}</div>` : ''}
             </div>
             <div class="poster-info">
               <div style="font-weight:600;font-size:13px;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(item.title)}">${esc(item.title)}</div>
@@ -700,7 +700,6 @@ function renderDetail() {
   <div class="backdrop-wrapper">
     ${item.backdropUrl ? `<img src="${esc(item.backdropUrl)}" class="backdrop-gradient" style="width:100%;height:100%;object-fit:cover"/>` : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1a2e,#0d0d14)"></div>`}
     <div style="position:absolute;inset:0;background:linear-gradient(to top,#0a0a0f 0%,rgba(10,10,15,.5) 50%,transparent 100%)"></div>
-    <div style="position:absolute;inset:0;background:linear-gradient(to right,#0a0a0f 0%,transparent 60%)"></div>
     <button class="detail-back-float" onclick="navigate('library')">${ic('back')} Back</button>
   </div>
 
@@ -714,7 +713,7 @@ function renderDetail() {
         ${typeBadge(item.type)}
         ${item.year ? `<span style="font-size:12px;color:#9ca3af">${item.year}</span>` : ''}
         ${item.runtime ? `<span style="font-size:12px;color:#9ca3af">\u00b7 ${item.runtime} min</span>` : ''}
-        ${item.tmdbRating ? `<span style="font-size:12px;color:#fbbf24;font-weight:700">${ic('star')} ${item.tmdbRating}</span>` : ''}
+        ${(item.tmdbRating||item.rating) ? `<span style="font-size:12px;color:#fbbf24;font-weight:700">${ic('star')} ${item.tmdbRating||item.rating}</span>` : ''}
       </div>
     </div>
   </div>
@@ -771,7 +770,7 @@ function renderDetail() {
       <div class="card" style="padding:16px;margin-bottom:14px">
         <div class="section-title">${ic('eye')} Details</div>
         ${[
-          item.tmdbRating && [`${ic('star')} Rating`, item.tmdbRating+' / 10'],
+          (item.tmdbRating||item.rating) && [`${ic('star')} Rating`, (item.tmdbRating||item.rating)+' / 10'],
           item.imdbRating && ['IMDb', item.imdbRating+' / 10'],
           item.runtime && ['Runtime', item.runtime+' min'],
           item.language && ['Language', item.language.toUpperCase()],
@@ -926,6 +925,7 @@ function openEditModal(id) {
       <div class="input-group"><label>Rating (0\u201310)</label><input class="input" id="e-rating" type="number" min="0" max="10" step="0.1" value="${item.rating||''}" placeholder="0-10"/></div>
       ` : ''}
       <div class="input-group"><label>Poster URL</label><input class="input" id="e-poster" type="url" value="${esc(item.posterUrl||'')}" placeholder="Paste poster image URL..."/></div>
+      <div class="input-group"><label>Banner URL</label><input class="input" id="e-banner" type="url" value="${esc(item.backdropUrl||'')}" placeholder="Paste backdrop/banner image URL..."/></div>
       <div class="input-group"><label>Overview</label><textarea class="input" id="e-overview" rows="3" placeholder="Write a brief description...">${esc(item.overview||'')}</textarea></div>
       <div class="input-group"><label>Comment</label><textarea class="input" id="e-comment" rows="3" placeholder="Personal notes about this item...">${esc(item.comment||'')}</textarea></div>
     </div>
@@ -944,6 +944,7 @@ async function saveEdit(id) {
   const patch = {
     title:    document.getElementById('e-title').value,
     posterUrl:document.getElementById('e-poster').value || null,
+    backdropUrl:document.getElementById('e-banner').value || null,
     overview: document.getElementById('e-overview').value || null,
     comment:  document.getElementById('e-comment')?.value || null,
   };
@@ -1295,7 +1296,7 @@ function renderCollectionDetail() {
             <div class="poster-img">
               ${item.posterUrl ? `<img src="${esc(item.posterUrl)}" alt="${esc(item.title)}" loading="lazy"/>` : `<div class="no-poster">${ic('film')}</div>`}
               <div class="poster-badges">${typeBadge(item.type)}</div>
-              ${item.tmdbRating ? `<div class="poster-rating">${ic('star')} ${item.tmdbRating}</div>` : ''}
+              ${(item.tmdbRating||item.rating) ? `<div class="poster-rating">${ic('star')} ${item.tmdbRating||item.rating}</div>` : ''}
             </div>
             <div class="poster-info">
               <div style="font-weight:600;font-size:13px;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(item.title)}">${esc(item.title)}</div>
