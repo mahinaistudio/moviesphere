@@ -1237,7 +1237,7 @@ function renderCollectionDetail() {
   const name = state.collectionDetailName;
   const colls = getCollections();
   const coll = colls.find(c => c.name === name);
-  if (!coll) return `<div style="text-align:center;padding:60px;color:#6b7280">Collection not found. <button onclick="navigate('collections')" style="color:var(--accent,#7c3aed);background:none;border:none;cursor:pointer;font-weight:600">${ic('back')} Back</button></div>`;
+  if (!coll) { navigate('collections'); return ''; }
 
   const heroImg = coll.bannerUrl || coll.items.find(x => x.backdropUrl)?.backdropUrl || '';
   let items = [...coll.items];
@@ -1382,6 +1382,7 @@ async function saveEditCollection(oldName) {
   }
   await api('PUT', '/api/collections/' + encodeURIComponent(newName), { description: desc, bannerUrl });
   document.getElementById('coll-modal')?.remove();
+  if (newName !== oldName) state.collectionDetailName = newName;
   await reloadAll();
   toast('Collection updated!');
 }
