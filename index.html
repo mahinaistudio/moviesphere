@@ -41,15 +41,13 @@ nav{padding:10px;flex:1;overflow-y:auto;position:relative;z-index:1}
 select.input{cursor:pointer;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6680' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;background-color:var(--bg-input)}
 select.input option{background:rgba(16,16,24,0.97);color:var(--text-primary);padding:8px 12px;border:none;border-radius:var(--radius-sm)}
 .dropdown{position:relative;display:inline-block}
-.detail-grid .dropdown{width:100%}
-.detail-grid .dropdown-btn{width:100%}
 .input-group .dropdown{width:100%}
 .input-group .dropdown .dropdown-btn{width:100%}
 .dropdown-btn{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-md);font-size:13px;font-weight:500;color:var(--text-primary);cursor:pointer;transition:all var(--transition-fast);min-width:140px;justify-content:space-between}
 .dropdown-btn:hover{border-color:var(--border-hover);background:rgba(255,255,255,0.06)}
 .dropdown-btn svg{width:14px;height:14px;color:var(--text-tertiary);transition:transform 0.2s}
 .dropdown.open .dropdown-btn svg{transform:rotate(180deg)}
-.dropdown-menu{position:absolute;top:calc(100% + 4px);left:0;background:rgba(16,16,24,0.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:4px;z-index:9999;box-shadow:var(--shadow-lg);animation:dropdownIn 0.15s ease;display:none;min-width:220px;max-height:320px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.15) transparent}
+.dropdown-menu{position:absolute;top:calc(100% + 4px);left:0;background:rgba(16,16,24,0.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:4px;z-index:9999;box-shadow:var(--shadow-lg);animation:dropdownIn 0.15s ease;display:none;width:100%;max-height:320px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.15) transparent}
 .dropdown.open .dropdown-menu{display:block}
 .dropdown-item{padding:8px 14px;border-radius:var(--radius-sm);font-size:13px;color:var(--text-secondary);cursor:pointer;transition:all var(--transition-fast);display:block;width:100%;text-align:left;border:none;background:none}
 .dropdown-item:hover{background:rgba(255,255,255,0.06);color:var(--text-primary)}
@@ -1392,6 +1390,7 @@ async function deleteCollection(name) {
   if (!await confirmModal(`Delete collection "${name}"? Movies will not be removed from your library.`)) return;
   await api('DELETE', '/api/collections/' + encodeURIComponent(name));
   await reloadAll();
+  navigate('/collections');
   toast('Collection deleted!');
 }
 
