@@ -698,7 +698,7 @@ function renderDetail() {
   <div class="detail-grid">
     <div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:20px">
-        <div style="flex:1;min-width:180px">
+        <div>
           ${dropdown('status-dd', [['plan_to_watch','Plan to Watch'],['completed','Completed']], item.status, function(v, d){ changeStatus(d.id, v); },{id:item.id})}
         </div>
         <button class="btn btn-ghost" style="padding:7px 14px" onclick="openEditModal('${esc(item.id)}')">${ic('pencil')} Edit</button>
@@ -1389,8 +1389,8 @@ async function saveEditCollection(oldName) {
 async function deleteCollection(name) {
   if (!await confirmModal(`Delete collection "${name}"? Movies will not be removed from your library.`)) return;
   await api('DELETE', '/api/collections/' + encodeURIComponent(name));
-  await reloadAll();
   navigate('/collections');
+  await reloadAll();
   toast('Collection deleted!');
 }
 
