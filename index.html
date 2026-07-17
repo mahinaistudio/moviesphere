@@ -1361,7 +1361,7 @@ function openEditCollModal(name) {
     </div>
     <div class="input-group"><label>Collection Name</label><input class="input" id="coll-edit-name" value="${esc(name)}" placeholder="Enter collection name..."/></div>
     <div class="input-group" style="margin-top:12px"><label>Description</label><textarea class="input" id="coll-edit-desc" rows="3" placeholder="Write a brief description...">${esc(coll?.description || '')}</textarea></div>
-    <div class="input-group" style="margin-top:12px"><label>Banner URL</label><input class="input" id="coll-edit-banner" type="url" value="${esc(coll?.bannerUrl || '')}" placeholder="Paste banner image URL..."/></div>
+    <div class="input-group" style="margin-top:12px"><label>Banner URL</label><input class="input" id="coll-edit-banner" type="url" value="${esc(coll?.bannerUrl || coll?.items?.find(x => x.backdropUrl)?.backdropUrl || '')}" placeholder="Paste banner image URL..."/></div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
       <button class="btn btn-ghost" onclick="document.getElementById('coll-modal').remove()">Cancel</button>
       <button class="btn btn-primary" onclick="saveEditCollection('${esc(name)}')">${ic('check')} Save</button>
