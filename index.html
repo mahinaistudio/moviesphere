@@ -1389,7 +1389,7 @@ async function saveEditCollection(oldName) {
 async function deleteCollection(name) {
   if (!await confirmModal(`Delete collection "${name}"? Movies will not be removed from your library.`)) return;
   await api('DELETE', '/api/collections/' + encodeURIComponent(name));
-  navigate('/collections');
+  navigate('collections');
   await reloadAll();
   toast('Collection deleted!');
 }
