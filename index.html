@@ -591,7 +591,7 @@ function renderDashboard() {
             </div>
             <div style="flex:1;min-width:0">
               <div style="font-weight:600;font-size:13px;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(item.title)}">${esc(item.title)}</div>
-              <div style="font-size:11px;color:#6b7280;margin-bottom:6px">${item.year||'\u2014'}${item.rating ? ` \u00b7 <span style="color:#fbbf24">${ic('star')}</span> ${item.rating}` : ''}</div>
+              <div style="font-size:11px;color:#6b7280;margin-bottom:6px">${item.year||'\u2014'}${(item.userRating||item.rating) ? ` \u00b7 <span style="color:#fbbf24">${ic('star')}</span> ${item.userRating||item.rating}` : ''}</div>
               ${typeBadge(item.type)}
             </div>
           </div>
@@ -645,7 +645,7 @@ function libraryListHTML() {
             <div class="poster-img">
               ${item.posterUrl ? `<img src="${esc(item.posterUrl)}" alt="${esc(item.title)}" loading="lazy"/>` : `<div class="no-poster">${ic('film')}</div>`}
               <div class="poster-badges">${typeBadge(item.type)}</div>
-              ${item.rating ? `<div class="poster-rating">${ic('star')} ${item.rating}</div>` : ''}
+              ${(item.userRating||item.rating) ? `<div class="poster-rating">${ic('star')} ${item.userRating||item.rating}</div>` : ''}
             </div>
             <div class="poster-info">
               <div style="font-weight:600;font-size:13px;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(item.title)}">${esc(item.title)}</div>
@@ -920,6 +920,8 @@ async function saveEdit(id) {
     const r = parseFloat(document.getElementById('e-rating').value)||null;
     if (isManual) {
       patch.rating = r;
+      const idx = state.items.findIndex(x => x.id === id);
+      if (idx >= 0) state.items[idx].userRating = r;
     } else {
       patch.shared_rating = r;
       const idx = state.items.findIndex(x => x.id === id);
@@ -1269,7 +1271,7 @@ function renderCollectionDetail() {
             <div class="poster-img">
               ${item.posterUrl ? `<img src="${esc(item.posterUrl)}" alt="${esc(item.title)}" loading="lazy"/>` : `<div class="no-poster">${ic('film')}</div>`}
               <div class="poster-badges">${typeBadge(item.type)}</div>
-              ${item.rating ? `<div class="poster-rating">${ic('star')} ${item.rating}</div>` : ''}
+              ${(item.userRating||item.rating) ? `<div class="poster-rating">${ic('star')} ${item.userRating||item.rating}</div>` : ''}
             </div>
             <div class="poster-info">
               <div style="font-weight:600;font-size:13px;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(item.title)}">${esc(item.title)}</div>
