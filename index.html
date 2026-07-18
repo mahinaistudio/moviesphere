@@ -249,7 +249,7 @@ async function reloadAll() {
   state.keys = keys;
   state.myProgress = {};
   progress.forEach(p => { state.myProgress[p.item_id] = p; });
-  render();
+  renderPage();
 }
 
 function signInWithGoogle() {
@@ -771,7 +771,7 @@ function renderDetail() {
 async function updateItem(id, patch) {
   state.items = state.items.map(x => x.id===id ? {...x, ...patch, updatedAt: new Date().toISOString()} : x);
   await api('PATCH', '/api/items/' + id, patch);
-  render();
+  renderPage();
 }
 
 async function changeStatus(id, newStatus) {
@@ -782,14 +782,14 @@ async function changeStatus(id, newStatus) {
   try {
     if (!x.seasons || !x.seasons.length) {
       state.items[idx] = { ...x, status: newStatus, updatedAt: new Date().toISOString() };
-      render();
+      renderPage();
       await api('PATCH', '/api/items/' + id, { status: newStatus });
       return;
     }
     const newVal = newStatus === 'completed' ? true : (newStatus === 'plan_to_watch' ? false : null);
     if (newVal === null) {
       state.items[idx] = { ...x, status: newStatus, updatedAt: new Date().toISOString() };
-      render();
+      renderPage();
       await api('PATCH', '/api/items/' + id, { status: newStatus });
       return;
     }
@@ -802,11 +802,11 @@ async function changeStatus(id, newStatus) {
     const progress = total > 0 ? Math.round(watched / total * 100) : 0;
     const updated = { ...x, seasons, watchedEpisodes: watched, progress, status: newStatus, updatedAt: new Date().toISOString() };
     state.items[idx] = updated;
-    render();
+    renderPage();
     await api('PATCH', '/api/items/' + id, { seasons, watchedEpisodes: watched, progress, status: newStatus });
   } catch(e) {
     state.items[idx] = prev;
-    render();
+    renderPage();
     toast('Failed to update status: ' + e.message, 'err');
   }
 }
@@ -829,11 +829,11 @@ async function toggleEp(itemId, si, ei) {
     const newItems = [...state.items];
     newItems[idx] = updated;
     state.items = newItems;
-    render();
+    renderPage();
     await api('PATCH', '/api/items/' + itemId, { seasons: updated.seasons, watchedEpisodes: watched, progress, status });
   } catch(e) {
     state.items[idx] = prev;
-    render();
+    renderPage();
     toast('Failed to update episode: ' + e.message, 'err');
   }
 }
@@ -859,11 +859,11 @@ async function toggleSeason(itemId, si) {
     const newItems = [...state.items];
     newItems[idx] = updated;
     state.items = newItems;
-    render();
+    renderPage();
     await api('PATCH', '/api/items/' + itemId, { seasons: updated.seasons, watchedEpisodes: watched, progress, status });
   } catch(e) {
     state.items[idx] = prev;
-    render();
+    renderPage();
     toast('Failed to update season: ' + e.message, 'err');
   }
 }
@@ -971,7 +971,7 @@ async function saveEdit(id) {
     const items = await api('GET', '/api/items');
     state.items = items;
     document.getElementById('edit-modal')?.remove();
-    render();
+    renderPage();
     toast('Changes saved!');
   } catch(e) {
     console.error(e);
@@ -989,20 +989,20 @@ let stepTimer = null;
 async function doImport() {
   importUrl = document.getElementById('import-url-input')?.value?.trim() || importUrl;
   if (!importUrl.trim()) return;
-  importErr = ''; importPreview = null; importStep = 0; render();
+  importErr = ''; importPreview = null; importStep = 0; renderPage();
   let cur = 0;
   clearInterval(stepTimer);
-  stepTimer = setInterval(() => { cur = Math.min(cur+1, STEPS.length-2); importStep=cur; render(); }, 750);
+  stepTimer = setInterval(() => { cur = Math.min(cur+1, STEPS.length-2); importStep=cur; renderPage(); }, 750);
   try {
     const data = await api('POST', '/api/items/import', { importUrl: importUrl });
     clearInterval(stepTimer);
-    importStep = STEPS.length-1; render();
-    setTimeout(() => { importStep=-1; importPreview=data; render(); }, 600);
+    importStep = STEPS.length-1; renderPage();
+    setTimeout(() => { importStep=-1; importPreview=data; renderPage(); }, 600);
   } catch (e) {
     clearInterval(stepTimer);
     importStep=-1; importErr=e.message||'Import failed';
   }
-  render();
+  renderPage();
 }
 
 async function saveImport() {
@@ -1024,7 +1024,7 @@ async function saveImport() {
 function toggleManualGenre(g) {
   const idx = manualForm.genres.indexOf(g);
   if (idx >= 0) manualForm.genres.splice(idx, 1); else manualForm.genres.push(g);
-  render();
+  renderPage();
 }
 function toggleEditGenre(btn, g) {
   const el = document.getElementById('e-genres');
@@ -1154,7 +1154,7 @@ async function removeFromCollection(itemId, collName) {
     await api('PATCH', '/api/items/' + itemId, { collectionName: null });
     state.items = state.items.map(x => x.id === itemId ? { ...x, collectionName: null } : x);
     toast('Item removed from collection');
-    render();
+    renderPage();
   } catch(e) { toast('Failed: ' + e.message, 'err'); }
 }
 
@@ -1197,7 +1197,7 @@ async function addToCollection(itemId, collName) {
     state.items = state.items.map(x => x.id === itemId ? { ...x, collectionName: collName } : x);
     toast('Item added to collection');
     document.getElementById('coll-add-modal')?.remove();
-    render();
+    renderPage();
     openAddToCollectionModal(collName);
   } catch(e) { toast('Failed: ' + e.message, 'err'); }
 }
@@ -1285,7 +1285,7 @@ function collectionsListHTML() {
 function openCollDetail(name) {
   state.collectionDetailName = name;
   state.page = 'collection_detail';
-  render();
+  renderPage();
   window.scrollTo(0, 0);
 }
 
@@ -1571,14 +1571,23 @@ function render() {
   document.body.classList.remove('login-page');
   const loginBg = document.getElementById('login-bg');
   if (loginBg) loginBg.style.display = 'none';
+  renderNav();
+  renderUserSidebar();
+  renderPage();
+}
+
+function renderNav() {
   const navEl = document.getElementById('nav');
+  if (!navEl) return;
   navEl.innerHTML = NAV.map(n=>`
     <button class="nav-btn${state.page===n.id?' active':''}" onclick="navigate('${n.id}')">
       ${ic(n.icon)} ${n.label}
     </button>`).join('');
   document.getElementById('nav-settings').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Settings`;
   document.getElementById('nav-settings').className = 'nav-btn' + (state.page==='settings'?' active':'');
-  renderUserSidebar();
+}
+
+function renderPage() {
   const fn = RENDERERS[state.page] || renderDashboard;
   document.getElementById('page-root').innerHTML = fn();
 }
