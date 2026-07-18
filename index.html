@@ -685,7 +685,7 @@ function renderDetail() {
       <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
         ${typeBadge(item.type)}
         ${item.year ? `<span style="font-size:12px;color:#9ca3af">${item.year}</span>` : ''}
-        ${item.runtime ? `<span style="font-size:12px;color:#9ca3af">\u00b7 ${item.runtime} min</span>` : ''}
+        ${item.type === 'movie' && item.runtime ? `<span style="font-size:12px;color:#9ca3af">\u00b7 ${item.runtime} min</span>` : ''}
         ${item.rating ? `<span style="font-size:12px;color:#fbbf24;font-weight:700">${ic('star')} ${item.rating}</span>` : ''}
       </div>
     </div>
@@ -743,7 +743,7 @@ function renderDetail() {
         <div class="section-title">${ic('eye')} Details</div>
         ${[
           item.rating && [`${ic('star')} Rating`, item.rating+' / 10'],
-          item.runtime && ['Runtime', item.runtime+' min'],
+          item.type === 'movie' && item.runtime && ['Runtime', item.runtime+' min'],
           item.language && ['Language', item.language.toUpperCase()],
           item.country && ['Country', item.country],
           item.year && ['Year', item.year],
@@ -892,7 +892,7 @@ function openEditModal(id) {
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div class="input-group"><label>Title</label><input class="input" id="e-title" value="${esc(item.title)}" placeholder="Enter title..."/></div>
-      ${isManual ? `
+      ${(!item.rating || isManual) ? `
       <div class="input-group"><label>Rating (0\u201310)</label><input class="input" id="e-rating" type="number" min="0" max="10" step="0.1" value="${item.rating||''}" placeholder="0-10"/></div>
       ` : ''}
       <div class="input-group"><label>Poster URL</label><input class="input" id="e-poster" type="url" value="${esc(item.posterUrl||'')}" placeholder="Paste poster image URL..."/></div>
@@ -919,7 +919,7 @@ async function saveEdit(id) {
     overview: document.getElementById('e-overview').value || null,
     comment:  document.getElementById('e-comment')?.value || null,
   };
-  if (isManual) {
+  if (!item.rating || isManual) {
     patch.rating = parseFloat(document.getElementById('e-rating').value)||null;
   }
   await updateItem(id, patch);
@@ -1287,11 +1287,8 @@ function renderCollectionDetail() {
           <span style="color:#6b7280">Movies</span><span style="font-weight:500">${coll.items.length}</span>
         </div>
         ${coll.items.length ? `
-        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1a1a2e;font-size:13px">
-          <span style="color:#6b7280">Avg Rating</span><span style="font-weight:500">${(coll.items.reduce((a, x) => a + (x.tmdbRating || 0), 0) / coll.items.filter(x => x.tmdbRating).length || 0).toFixed(1)}</span>
-        </div>
         <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px">
-          <span style="color:#6b7280">Total Runtime</span><span style="font-weight:500">${Math.round(coll.items.reduce((a, x) => a + (x.runtime || 0) * (x.progress || 0) / 100, 0))}m</span>
+          <span style="color:#6b7280">Avg Rating</span><span style="font-weight:500">${(coll.items.reduce((a, x) => a + (x.rating || 0), 0) / (coll.items.filter(x => x.rating).length || 1)).toFixed(1)}</span>
         </div>` : ''}
       </div>
       ${coll.description ? `
