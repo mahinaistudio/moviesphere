@@ -270,7 +270,7 @@ function logout() {
 let state = {
   page: 'dashboard', detailId: null, user: null,
   items: [], collections: [], keys: { tmdb: '', omdb: '' },
-  myProgress: {}, collectionDetailName: null,
+  myProgress: {}, collectionDetailName: null, prevPage: 'library',
 };
 
 // â”€â”€ Router â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -282,6 +282,8 @@ const NAV = [
 ];
 
 function navigate(page, extra={}) {
+  if (page === 'detail') detailExpanded = null;
+  state.prevPage = state.page;
   Object.assign(state, { page, ...extra });
   const hash = page === 'detail' && extra.detailId ? `#detail/${extra.detailId}` : page === 'collection_detail' && extra.collectionDetailName ? `#collection/${encodeURIComponent(extra.collectionDetailName)}` : `#${page}`;
   history.replaceState(null, '', hash);
@@ -397,7 +399,7 @@ function searchInput(key, val) {
   }, 200);
 }
 const uid  = () => Date.now().toString(36)+Math.random().toString(36).slice(2);
-const esc  = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const esc  = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
 // â”€â”€ Types, Statuses â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const TYPES = {
@@ -534,7 +536,7 @@ function getSuggestions() {
 
 // Page: Dashboard
 function renderDashboard() {
-  const { items, acts } = state;
+  const { items } = state;
   const movies = items.filter(x=>x.type==='movie').length;
   const shows  = items.filter(x=>['tv_show','anime','web_series','mini_series'].includes(x.type)).length;
   const anime  = items.filter(x=>x.type==='anime').length;
@@ -664,7 +666,7 @@ function libraryListHTML() {
 let detailExpanded = 1;
 function renderDetail() {
   const item = state.items.find(x=>x.id===state.detailId);
-  if (!item) return `<div style="text-align:center;padding:60px;color:#6b7280">Item not found. <button onclick="navigate('library')" style="color:var(--accent,#7c3aed);background:none;border:none;cursor:pointer;font-weight:600">${ic('back')} Back</button></div>`;
+  if (!item) return `<div style="text-align:center;padding:60px;color:#6b7280">Item not found. <button onclick="navigate(state.prevPage)" style="color:var(--accent,#7c3aed);background:none;border:none;cursor:pointer;font-weight:600">${ic('back')} Back</button></div>`;
 
   const hasEps = item.seasons && item.seasons.length > 0;
   const totalW  = item.seasons ? item.seasons.reduce((a,s)=>a+s.episodes.filter(e=>e.watched).length,0) : 0;
@@ -673,7 +675,7 @@ function renderDetail() {
   <div class="backdrop-wrapper">
     ${item.backdropUrl ? `<img src="${esc(item.backdropUrl)}" class="backdrop-gradient" style="width:100%;height:100%;object-fit:cover"/>` : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1a2e,#0d0d14)"></div>`}
     <div style="position:absolute;inset:0;background:linear-gradient(to top,#0a0a0f 0%,rgba(10,10,15,.5) 50%,transparent 100%)"></div>
-    <button class="detail-back-float" onclick="navigate('library')">${ic('back')} Back</button>
+    <button class="detail-back-float" onclick="navigate(state.prevPage)">${ic('back')} Back</button>
   </div>
 
   <div class="detail-hero">
@@ -775,89 +777,94 @@ async function changeStatus(id, newStatus) {
   const idx = state.items.findIndex(x => x.id === id);
   if (idx < 0) return;
   const x = state.items[idx];
-  if (!x.seasons || !x.seasons.length) {
-    state.items[idx] = { ...x, status: newStatus, updatedAt: new Date().toISOString() };
+  const prev = { ...x };
+  try {
+    if (!x.seasons || !x.seasons.length) {
+      state.items[idx] = { ...x, status: newStatus, updatedAt: new Date().toISOString() };
+      render();
+      await api('PATCH', '/api/items/' + id, { status: newStatus });
+      return;
+    }
+    const newVal = newStatus === 'completed' ? true : (newStatus === 'plan_to_watch' ? false : null);
+    if (newVal === null) {
+      state.items[idx] = { ...x, status: newStatus, updatedAt: new Date().toISOString() };
+      render();
+      await api('PATCH', '/api/items/' + id, { status: newStatus });
+      return;
+    }
+    const seasons = x.seasons.map(s => ({
+      ...s,
+      episodes: s.episodes.map(ep => ({ ...ep, watched: newVal }))
+    }));
+    const total = seasons.reduce((a,s) => a + s.episodes.length, 0);
+    const watched = seasons.reduce((a,s) => a + s.episodes.filter(e => e.watched).length, 0);
+    const progress = total > 0 ? Math.round(watched / total * 100) : 0;
+    const updated = { ...x, seasons, watchedEpisodes: watched, progress, status: newStatus, updatedAt: new Date().toISOString() };
+    state.items[idx] = updated;
     render();
-    await api('PATCH', '/api/items/' + id, { status: newStatus });
-    return;
-  }
-  const newVal = newStatus === 'completed' ? true : (newStatus === 'plan_to_watch' ? false : null);
-  if (newVal === null) {
-    state.items[idx] = { ...x, status: newStatus, updatedAt: new Date().toISOString() };
+    await api('PATCH', '/api/items/' + id, { seasons, watchedEpisodes: watched, progress, status: newStatus });
+  } catch(e) {
+    state.items[idx] = prev;
     render();
-    await api('PATCH', '/api/items/' + id, { status: newStatus });
-    return;
+    toast('Failed to update status: ' + e.message, 'err');
   }
-  const seasons = x.seasons.map(s => ({
-    ...s,
-    episodes: s.episodes.map(ep => ({ ...ep, watched: newVal }))
-  }));
-  const total = seasons.reduce((a,s) => a + s.episodes.length, 0);
-  const watched = seasons.reduce((a,s) => a + s.episodes.filter(e => e.watched).length, 0);
-  const progress = total > 0 ? Math.round(watched / total * 100) : 0;
-  const updated = { ...x, seasons, watchedEpisodes: watched, progress, status: newStatus, updatedAt: new Date().toISOString() };
-  state.items[idx] = updated;
-  render();
-  await api('PATCH', '/api/items/' + id, { seasons, watchedEpisodes: watched, progress, status: newStatus });
 }
 
 async function toggleEp(itemId, si, ei) {
   const idx = state.items.findIndex(x => x.id === itemId);
   if (idx < 0) return;
   const x = state.items[idx];
-  const seasons = x.seasons.map((s,i) => {
-    if (i !== si) return s;
-    return { ...s, episodes: s.episodes.map((ep,j) => j===ei ? {...ep, watched:!ep.watched} : ep) };
-  });
-  const total   = seasons.reduce((a,s)=>a+s.episodes.length,0);
-  const watched = seasons.reduce((a,s)=>a+s.episodes.filter(e=>e.watched).length,0);
-  const progress= total>0 ? Math.round(watched/total*100) : x.progress;
-  const status = progress >= 100 ? 'completed' : (progress > 0 ? (x.type === 'movie' ? 'plan_to_watch' : 'watching') : 'plan_to_watch');
-  const ep = seasons[si].episodes[ei];
-  const updated = { ...x, seasons, watchedEpisodes:watched, progress, status, updatedAt:new Date().toISOString() };
-  const newItems = [...state.items];
-  newItems[idx] = updated;
-  state.items = newItems;
-
-  const check = document.querySelector(`[data-ep="${itemId}-${si}-${ei}"] .ep-check`);
-  if (check) {
-    check.classList.toggle('done', ep.watched);
-    check.innerHTML = ep.watched ? ic('check') : '';
+  const prev = { ...x };
+  try {
+    const seasons = x.seasons.map((s,i) => {
+      if (i !== si) return s;
+      return { ...s, episodes: s.episodes.map((ep,j) => j===ei ? {...ep, watched:!ep.watched} : ep) };
+    });
+    const total   = seasons.reduce((a,s)=>a+s.episodes.length,0);
+    const watched = seasons.reduce((a,s)=>a+s.episodes.filter(e=>e.watched).length,0);
+    const progress= total>0 ? Math.round(watched/total*100) : x.progress;
+    const status = progress >= 100 ? 'completed' : (progress > 0 ? (x.type === 'movie' ? 'plan_to_watch' : 'watching') : 'plan_to_watch');
+    const updated = { ...x, seasons, watchedEpisodes:watched, progress, status, updatedAt:new Date().toISOString() };
+    const newItems = [...state.items];
+    newItems[idx] = updated;
+    state.items = newItems;
+    render();
+    await api('PATCH', '/api/items/' + itemId, { seasons: updated.seasons, watchedEpisodes: watched, progress, status });
+  } catch(e) {
+    state.items[idx] = prev;
+    render();
+    toast('Failed to update episode: ' + e.message, 'err');
   }
-  const label = document.querySelector(`[data-ep="${itemId}-${si}-${ei}"] span:last-child`);
-  if (label && ep.watched) { label.style.color = '#6b7280'; label.style.textDecoration = 'line-through'; }
-  else if (label) { label.style.color = '#f8f8ff'; label.style.textDecoration = 'none'; }
-
-  const progBar = document.querySelector(`[data-prog="${itemId}"]`);
-  if (progBar) progBar.style.width = progress + '%';
-  const progText = document.querySelector(`[data-progtext="${itemId}"]`);
-  if (progText) progText.textContent = `${total > 0 ? watched : 0} / ${total || 0} episodes (${progress}%)`;
-
-  render();
-  await api('PATCH', '/api/items/' + itemId, { seasons: updated.seasons, watchedEpisodes: watched, progress, status });
 }
 
 async function toggleSeason(itemId, si) {
   const idx = state.items.findIndex(x => x.id === itemId);
   if (idx < 0) return;
   const x = state.items[idx];
-  const s = x.seasons[si];
-  const allWatched = s.episodes.every(e => e.watched);
-  const newVal = !allWatched;
-  const seasons = x.seasons.map((ss,i) => {
-    if (i !== si) return ss;
-    return { ...ss, episodes: ss.episodes.map(ep => ({ ...ep, watched: newVal })) };
-  });
-  const total   = seasons.reduce((a,s)=>a+s.episodes.length,0);
-  const watched = seasons.reduce((a,s)=>a+s.episodes.filter(e=>e.watched).length,0);
-  const progress= total>0 ? Math.round(watched/total*100) : x.progress;
-  const status = progress >= 100 ? 'completed' : (progress > 0 ? (x.type === 'movie' ? 'plan_to_watch' : 'watching') : 'plan_to_watch');
-  const updated = { ...x, seasons, watchedEpisodes:watched, progress, status, updatedAt:new Date().toISOString() };
-  const newItems = [...state.items];
-  newItems[idx] = updated;
-  state.items = newItems;
-  render();
-  await api('PATCH', '/api/items/' + itemId, { seasons: updated.seasons, watchedEpisodes: watched, progress, status });
+  const prev = { ...x };
+  try {
+    const s = x.seasons[si];
+    const allWatched = s.episodes.every(e => e.watched);
+    const newVal = !allWatched;
+    const seasons = x.seasons.map((ss,i) => {
+      if (i !== si) return ss;
+      return { ...ss, episodes: ss.episodes.map(ep => ({ ...ep, watched: newVal })) };
+    });
+    const total   = seasons.reduce((a,s)=>a+s.episodes.length,0);
+    const watched = seasons.reduce((a,s)=>a+s.episodes.filter(e=>e.watched).length,0);
+    const progress= total>0 ? Math.round(watched/total*100) : x.progress;
+    const status = progress >= 100 ? 'completed' : (progress > 0 ? (x.type === 'movie' ? 'plan_to_watch' : 'watching') : 'plan_to_watch');
+    const updated = { ...x, seasons, watchedEpisodes:watched, progress, status, updatedAt:new Date().toISOString() };
+    const newItems = [...state.items];
+    newItems[idx] = updated;
+    state.items = newItems;
+    render();
+    await api('PATCH', '/api/items/' + itemId, { seasons: updated.seasons, watchedEpisodes: watched, progress, status });
+  } catch(e) {
+    state.items[idx] = prev;
+    render();
+    toast('Failed to update season: ' + e.message, 'err');
+  }
 }
 
 async function deleteItem(id) {
@@ -1288,7 +1295,7 @@ function renderCollectionDetail() {
   if (!coll) { navigate('collections'); return ''; }
 
   const heroImg = coll.bannerUrl || coll.items.find(x => x.backdropUrl)?.backdropUrl || '';
-  let items = [...coll.items];
+  const items = coll.items;
 
   return `<div class="page coll-detail">
 
