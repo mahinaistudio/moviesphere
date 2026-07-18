@@ -767,7 +767,7 @@ function renderDetail() {
 
 async function updateItem(id, patch) {
   state.items = state.items.map(x => x.id===id ? {...x, ...patch, updatedAt: new Date().toISOString()} : x);
-  try { await api('PATCH', '/api/items/' + id, patch); } catch(e) { console.error(e); }
+  await api('PATCH', '/api/items/' + id, patch);
   render();
 }
 
@@ -879,7 +879,6 @@ function openEditModal(id) {
   if (!item) return;
   const isManual = !item.tmdbId && !item.imdbId;
   const isAutoSeries = !isManual && ['tv_show','anime','mini_series','web_series'].includes(item.type);
-  const showNull = (val) => !val;
   const el = document.createElement('div');
   el.className = 'modal-bg';
   el.id = 'edit-modal';
@@ -890,13 +889,13 @@ function openEditModal(id) {
       <button onclick="document.getElementById('edit-modal').remove()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:20px">${ic('x')}</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
-      ${showNull(item.title) ? `<div class="input-group"><label>Title</label><input class="input" id="e-title" value="" placeholder="Enter title..."/></div>` : ''}
-      ${showNull(item.rating) ? `<div class="input-group"><label>Rating (0\u201310)</label><input class="input" id="e-rating" type="number" min="0" max="10" step="0.1" value="" placeholder="0-10"/></div>` : ''}
-      ${showNull(item.year) ? `<div class="input-group"><label>Year</label><input class="input" id="e-year" type="number" min="1800" max="2099" value="" placeholder="Release year..."/></div>` : ''}
-      ${(!isAutoSeries) && showNull(item.runtime) ? `<div class="input-group"><label>Runtime (minutes)</label><input class="input" id="e-runtime" type="number" min="0" value="" placeholder="Minutes..."/></div>` : ''}
-      ${showNull(item.language) ? `<div class="input-group"><label>Language</label><input class="input" id="e-language" value="" placeholder="e.g. en"/></div>` : ''}
-      ${showNull(item.country) ? `<div class="input-group"><label>Country</label><input class="input" id="e-country" value="" placeholder="e.g. US"/></div>` : ''}
-      ${isManual && showNull(item.genres?.length) ? `<div class="input-group"><label>Genres</label><input class="input" id="e-genres" value="" placeholder="Comma separated..."/></div>` : ''}
+      ${`<div class="input-group"><label>Title</label><input class="input" id="e-title" value="${esc(item.title||'')}" placeholder="Enter title..."/></div>`}
+      ${`<div class="input-group"><label>Rating (0\u201310)</label><input class="input" id="e-rating" type="number" min="0" max="10" step="0.1" value="${esc(item.rating!=null?item.rating:'')}" placeholder="0-10"/></div>`}
+      ${`<div class="input-group"><label>Year</label><input class="input" id="e-year" type="number" min="1800" max="2099" value="${esc(item.year!=null?item.year:'')}" placeholder="Release year..."/></div>`}
+      ${(!isAutoSeries) ? `<div class="input-group"><label>Runtime (minutes)</label><input class="input" id="e-runtime" type="number" min="0" value="${esc(item.runtime!=null?item.runtime:'')}" placeholder="Minutes..."/></div>` : ''}
+      ${`<div class="input-group"><label>Language</label><input class="input" id="e-language" value="${esc(item.language||'')}" placeholder="e.g. en"/></div>`}
+      ${`<div class="input-group"><label>Country</label><input class="input" id="e-country" value="${esc(item.country||'')}" placeholder="e.g. US"/></div>`}
+      ${isManual ? `<div class="input-group"><label>Genres</label><input class="input" id="e-genres" value="${esc(Array.isArray(item.genres)?item.genres.join(', '):'')}" placeholder="Comma separated..."/></div>` : ''}
       <div class="input-group"><label>Poster URL</label><input class="input" id="e-poster" type="url" value="${esc(item.posterUrl||'')}" placeholder="Paste poster image URL..."/></div>
       <div class="input-group"><label>Banner URL</label><input class="input" id="e-banner" type="url" value="${esc(item.backdropUrl||'')}" placeholder="Paste backdrop/banner image URL..."/></div>
       <div class="input-group"><label>Overview</label><textarea class="input" id="e-overview" rows="3" placeholder="Write a brief description...">${esc(item.overview||'')}</textarea></div>
@@ -948,13 +947,17 @@ async function saveEdit(id) {
     else patch.overview = overviewEl.value || null;
   }
   if (commentEl) {
-    if (!item.comment) patch.shared_comment = commentEl.value || null;
-    else patch.comment = commentEl.value || null;
+    patch.comment = commentEl.value || null;
   }
 
-  await updateItem(id, patch);
-  document.getElementById('edit-modal')?.remove();
-  toast('Changes saved!');
+  try {
+    await updateItem(id, patch);
+    document.getElementById('edit-modal')?.remove();
+    toast('Changes saved!');
+  } catch(e) {
+    console.error(e);
+    toast('Failed to save changes: ' + (e.message || 'Unknown error'));
+  }
 }
 
 // â”€â”€ Page: Add Content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
