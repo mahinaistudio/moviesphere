@@ -683,7 +683,6 @@ function renderDetail() {
     <div class="detail-title">
       <h1>${esc(item.title)}</h1>
       <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-        ${typeBadge(item.type)}
         ${item.year ? `<span style="font-size:12px;color:#9ca3af">${item.year}</span>` : ''}
         ${item.type === 'movie' && item.runtime ? `<span style="font-size:12px;color:#9ca3af">\u00b7 ${item.runtime} min</span>` : ''}
         ${item.rating ? `<span style="font-size:12px;color:#fbbf24;font-weight:700">${ic('star')} ${item.rating}</span>` : ''}
