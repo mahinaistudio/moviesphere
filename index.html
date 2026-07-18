@@ -217,6 +217,7 @@ const ICONS = {
   image:         '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
   barChart:      '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>',
   bookmark:      '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>',
+  refresh:       '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M21 21v-5h-5"/></svg>',
 };
 
 function ic(name) {
@@ -487,12 +488,11 @@ function getSuggestions() {
   items.forEach(item => {
     const age = now - new Date(item.updatedAt||item.createdAt||0).getTime();
     const recency = Math.max(0.2, 1 - age / (30*24*60*60*1000));
-    const ratingBoost = item.tmdbRating ? item.tmdbRating / 10 : 0.5;
+    const ratingBoost = item.rating ? item.rating / 10 : 0.5;
     const w = recency * (0.6 + ratingBoost * 0.4);
 
     addWeight('type:'+item.type, w);
     (item.genres||[]).forEach(g => addWeight('genre:'+g.toLowerCase(), w));
-    (item.tags||[]).forEach(t => addWeight('tag:'+t.toLowerCase(), w));
     if (item.language) addWeight('lang:'+item.language.toLowerCase(), w);
     if (item.country) addWeight('country:'+item.country.toLowerCase(), w);
   });
@@ -515,10 +515,6 @@ function getSuggestions() {
     (item.genres||[]).forEach(g => {
       const w = freq['genre:'+g.toLowerCase()] || 0;
       if (w > 0) { score += w * 2; reasons.push(g); }
-    });
-    (item.tags||[]).forEach(t => {
-      const w = freq['tag:'+t.toLowerCase()] || 0;
-      if (w > 0) { score += w; }
     });
     if (item.language) {
       const w = freq['lang:'+item.language.toLowerCase()] || 0;
@@ -595,7 +591,7 @@ function renderDashboard() {
             </div>
             <div style="flex:1;min-width:0">
               <div style="font-weight:600;font-size:13px;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(item.title)}">${esc(item.title)}</div>
-              <div style="font-size:11px;color:#6b7280;margin-bottom:6px">${item.year||'\u2014'}${(item.tmdbRating||item.rating) ? ` \u00b7 <span style="color:#fbbf24">${ic('star')}</span> ${item.tmdbRating||item.rating}` : ''}</div>
+              <div style="font-size:11px;color:#6b7280;margin-bottom:6px">${item.year||'\u2014'}${item.rating ? ` \u00b7 <span style="color:#fbbf24">${ic('star')}</span> ${item.rating}` : ''}</div>
               ${typeBadge(item.type)}
             </div>
           </div>
@@ -649,7 +645,7 @@ function libraryListHTML() {
             <div class="poster-img">
               ${item.posterUrl ? `<img src="${esc(item.posterUrl)}" alt="${esc(item.title)}" loading="lazy"/>` : `<div class="no-poster">${ic('film')}</div>`}
               <div class="poster-badges">${typeBadge(item.type)}</div>
-              ${(item.tmdbRating||item.rating) ? `<div class="poster-rating">${ic('star')} ${item.tmdbRating||item.rating}</div>` : ''}
+              ${item.rating ? `<div class="poster-rating">${ic('star')} ${item.rating}</div>` : ''}
             </div>
             <div class="poster-info">
               <div style="font-weight:600;font-size:13px;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(item.title)}">${esc(item.title)}</div>
@@ -690,7 +686,7 @@ function renderDetail() {
         ${typeBadge(item.type)}
         ${item.year ? `<span style="font-size:12px;color:#9ca3af">${item.year}</span>` : ''}
         ${item.runtime ? `<span style="font-size:12px;color:#9ca3af">\u00b7 ${item.runtime} min</span>` : ''}
-        ${(item.tmdbRating||item.rating) ? `<span style="font-size:12px;color:#fbbf24;font-weight:700">${ic('star')} ${item.tmdbRating||item.rating}</span>` : ''}
+        ${item.rating ? `<span style="font-size:12px;color:#fbbf24;font-weight:700">${ic('star')} ${item.rating}</span>` : ''}
       </div>
     </div>
   </div>
@@ -746,8 +742,7 @@ function renderDetail() {
       <div class="card" style="padding:16px;margin-bottom:14px">
         <div class="section-title">${ic('eye')} Details</div>
         ${[
-          (item.tmdbRating||item.rating) && [`${ic('star')} Rating`, (item.tmdbRating||item.rating)+' / 10'],
-          item.imdbRating && ['IMDb', item.imdbRating+' / 10'],
+          item.rating && [`${ic('star')} Rating`, item.rating+' / 10'],
           item.runtime && ['Runtime', item.runtime+' min'],
           item.language && ['Language', item.language.toUpperCase()],
           item.country && ['Country', item.country],
@@ -982,7 +977,7 @@ function toggleManualGenre(g) {
 
 async function saveManual() {
   if (!manualForm.title.trim()) { toast('Title is required','err'); return; }
-  const newItem = { ...manualForm, id:uid(), year:manualForm.year?parseInt(manualForm.year):null, rating:manualForm.rating?parseFloat(manualForm.rating):null, runtime:manualForm.runtime?parseInt(manualForm.runtime):null, progress:parseInt(manualForm.progress)||0, watchedEpisodes:0, cast:[], tags:[], seasons:[], createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() };
+  const newItem = { ...manualForm, id:uid(), year:manualForm.year?parseInt(manualForm.year):null, rating:manualForm.rating?parseFloat(manualForm.rating):null, runtime:manualForm.runtime?parseInt(manualForm.runtime):null, progress:parseInt(manualForm.progress)||0, watchedEpisodes:0, cast:[], seasons:[], createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() };
   try {
     await api('POST', '/api/items', newItem);
     state.items = [newItem, ...state.items];
@@ -1040,8 +1035,7 @@ function renderAdd() {
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
             ${typeBadge(importPreview.type)}
             ${importPreview.year ? `<span style="font-size:12px;color:#9ca3af">${importPreview.year}</span>` : ''}
-            ${importPreview.tmdbRating ? `<span style="font-size:12px;color:#fbbf24;font-weight:700">${ic('star')} ${importPreview.tmdbRating}</span>` : ''}
-            ${importPreview.imdbRating ? `<span style="font-size:12px;color:#fbbf24">IMDb ${importPreview.imdbRating}</span>` : ''}
+            ${importPreview.rating ? `<span style="font-size:12px;color:#fbbf24;font-weight:700">${ic('star')} ${importPreview.rating}</span>` : ''}
             ${importPreview.seasons?.length ? `<span style="font-size:12px;color:#9ca3af">${importPreview.seasons.length} seasons \u00b7 ${importPreview.totalEpisodes} eps</span>` : ''}
           </div>
           ${importPreview.overview ? `<p style="font-size:13px;color:#9ca3af;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px">${esc(importPreview.overview)}</p>` : ''}
@@ -1271,7 +1265,7 @@ function renderCollectionDetail() {
             <div class="poster-img">
               ${item.posterUrl ? `<img src="${esc(item.posterUrl)}" alt="${esc(item.title)}" loading="lazy"/>` : `<div class="no-poster">${ic('film')}</div>`}
               <div class="poster-badges">${typeBadge(item.type)}</div>
-              ${(item.tmdbRating||item.rating) ? `<div class="poster-rating">${ic('star')} ${item.tmdbRating||item.rating}</div>` : ''}
+              ${item.rating ? `<div class="poster-rating">${ic('star')} ${item.rating}</div>` : ''}
             </div>
             <div class="poster-info">
               <div style="font-weight:600;font-size:13px;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(item.title)}">${esc(item.title)}</div>
@@ -1408,7 +1402,11 @@ function renderSettings() {
       <div><button class="btn btn-primary" onclick="saveKeys()">${ic('check')} Save Keys</button></div>
     </div>
   </div>
-
+  <div class="card" style="padding:24px">
+    <h2 style="font-weight:700;font-size:16px;margin-bottom:4px">${ic('refresh')} Refresh Data</h2>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:18px">Re-fetch metadata for all imported movies &amp; shows. Normally runs automatically every 7 days.</p>
+    <div><button class="btn btn-primary" id="refresh-btn" onclick="refreshData()">${ic('refresh')} Refresh Now</button></div>
+  </div>
 </div>`;
 }
 
@@ -1417,6 +1415,23 @@ async function saveKeys() {
   state.keys.omdb = document.getElementById('sk-omdb').value.trim() || state.keys.omdb;
   await api("PUT", "/api/keys", { tmdb: state.keys.tmdb, omdb: state.keys.omdb });
   toast('API keys saved!');
+}
+
+async function refreshData() {
+  const btn = document.getElementById('refresh-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Refreshing...'; }
+  try {
+    const d = await api('POST', '/api/items/refresh');
+    if (d.refreshed > 0) {
+      await reloadAll();
+      toast(`Refreshed! ${d.refreshed} item(s) updated.`, 'ok');
+    } else {
+      toast('All data is fresh!', 'ok');
+    }
+  } catch (e) {
+    toast('Refresh failed: ' + e.message, 'err');
+  }
+  if (btn) { btn.disabled = false; btn.innerHTML = `${ic('refresh')} Refresh Now`; }
 }
 
 // â”€â”€ Main Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -1533,6 +1548,9 @@ async function boot() {
     } catch (e) {
       toast('Failed to load data: ' + e.message, 'err');
     }
+    api('POST', '/api/items/refresh').then(d => {
+      if (d.refreshed > 0) reloadAll();
+    }).catch(() => {});
   }
   const hash = window.location.hash.replace('#','');
   if (hash.startsWith('detail/')) {
