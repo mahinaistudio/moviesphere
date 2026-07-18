@@ -959,8 +959,11 @@ async function saveEdit(id) {
   }
 
   try {
-    await updateItem(id, patch);
+    await api('PATCH', '/api/items/' + id, patch);
+    const items = await api('GET', '/api/items');
+    state.items = items;
     document.getElementById('edit-modal')?.remove();
+    render();
     toast('Changes saved!');
   } catch(e) {
     console.error(e);
