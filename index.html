@@ -903,7 +903,7 @@ function openEditModal(id) {
       ${showRuntime ? `<div class="input-group"><label>Runtime (minutes)</label><input class="input" id="e-runtime" type="number" min="0" value="${esc(item.runtime!=null?item.runtime:'')}" placeholder="Minutes..."/></div>` : ''}
       ${showLanguage ? `<div class="input-group"><label>Language</label><input type="hidden" id="e-language" value="${esc(item.language||'')}"/>${dropdown('e-lang-dd', LANGUAGES, item.language||'', function(v, d, el){ document.getElementById('e-language').value = v; var lbl = LANGUAGES.find(o=>o[0]===v); if(lbl && el) el.querySelector('.dropdown-btn span').textContent = lbl[1]; })}</div>` : ''}
       ${showCountry ? `<div class="input-group"><label>Country</label><input type="hidden" id="e-country" value="${esc(item.country||'')}"/>${dropdown('e-country-dd', COUNTRIES, item.country||'', function(v, d, el){ document.getElementById('e-country').value = v; var lbl = COUNTRIES.find(o=>o[0]===v); if(lbl && el) el.querySelector('.dropdown-btn span').textContent = lbl[1]; })}</div>` : ''}
-      ${showGenres ? `<div class="input-group"><label>Genres</label><input class="input" id="e-genres" value="${esc(Array.isArray(item.genres)?item.genres.join(', '):'')}" placeholder="Comma separated..."/></div>` : ''}
+      ${showGenres ? `<div class="input-group"><label>Genres</label><input type="hidden" id="e-genres" value="${esc(Array.isArray(item.genres)?item.genres.join(', '):'')}"/><div style="display:flex;flex-wrap:wrap;gap:6px">${['Action','Adventure','Animation','Comedy','Crime','Documentary','Drama','Family','Fantasy','History','Horror','Music','Mystery','Romance','Sci-Fi','Thriller','War','Western'].map(g => { const sel = (item.genres||[]).includes(g); return `<button type="button" class="chip" onclick="toggleEditGenre(this,'${g}')" style="${sel?'background:var(--accent);color:#fff;border-color:var(--accent)':''}">${esc(g)}</button>`; }).join('')}</div></div>` : ''}
       <div class="input-group"><label>Poster URL</label><input class="input" id="e-poster" type="url" value="${esc(item.posterUrl||'')}" placeholder="Paste poster image URL..."/></div>
       <div class="input-group"><label>Banner URL</label><input class="input" id="e-banner" type="url" value="${esc(item.backdropUrl||'')}" placeholder="Paste backdrop/banner image URL..."/></div>
       <div class="input-group"><label>Overview</label><textarea class="input" id="e-overview" rows="3" placeholder="Write a brief description...">${esc(item.overview||'')}</textarea></div>
@@ -1014,6 +1014,16 @@ function toggleManualGenre(g) {
   const idx = manualForm.genres.indexOf(g);
   if (idx >= 0) manualForm.genres.splice(idx, 1); else manualForm.genres.push(g);
   render();
+}
+function toggleEditGenre(btn, g) {
+  const el = document.getElementById('e-genres');
+  const arr = el.value ? el.value.split(',').map(s=>s.trim()).filter(Boolean) : [];
+  const idx = arr.indexOf(g);
+  if (idx >= 0) arr.splice(idx, 1); else arr.push(g);
+  el.value = arr.join(', ');
+  btn.style.background = idx >= 0 ? '' : 'var(--accent)';
+  btn.style.color = idx >= 0 ? '' : '#fff';
+  btn.style.borderColor = idx >= 0 ? '' : 'var(--accent)';
 }
 
 async function saveManual() {
