@@ -878,6 +878,8 @@ function openEditModal(id) {
   const item = state.items.find(x=>x.id===id);
   if (!item) return;
   const isManual = !item.tmdbId && !item.imdbId;
+  const isAutoSeries = !isManual && ['tv_show','anime','mini_series','web_series'].includes(item.type);
+  const showNull = (val) => !val;
   const el = document.createElement('div');
   el.className = 'modal-bg';
   el.id = 'edit-modal';
@@ -888,10 +890,13 @@ function openEditModal(id) {
       <button onclick="document.getElementById('edit-modal').remove()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:20px">${ic('x')}</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
-      <div class="input-group"><label>Title</label><input class="input" id="e-title" value="${esc(item.title)}" placeholder="Enter title..."/></div>
-      ${(!item.rating || isManual) ? `
-      <div class="input-group"><label>Rating (0\u201310)</label><input class="input" id="e-rating" type="number" min="0" max="10" step="0.1" value="${(item.userRating || item.rating) || ''}" placeholder="0-10"/></div>
-      ` : ''}
+      ${showNull(item.title) ? `<div class="input-group"><label>Title</label><input class="input" id="e-title" value="" placeholder="Enter title..."/></div>` : ''}
+      ${showNull(item.rating) ? `<div class="input-group"><label>Rating (0\u201310)</label><input class="input" id="e-rating" type="number" min="0" max="10" step="0.1" value="" placeholder="0-10"/></div>` : ''}
+      ${showNull(item.year) ? `<div class="input-group"><label>Year</label><input class="input" id="e-year" type="number" min="1800" max="2099" value="" placeholder="Release year..."/></div>` : ''}
+      ${(!isAutoSeries) && showNull(item.runtime) ? `<div class="input-group"><label>Runtime (minutes)</label><input class="input" id="e-runtime" type="number" min="0" value="" placeholder="Minutes..."/></div>` : ''}
+      ${showNull(item.language) ? `<div class="input-group"><label>Language</label><input class="input" id="e-language" value="" placeholder="e.g. en"/></div>` : ''}
+      ${showNull(item.country) ? `<div class="input-group"><label>Country</label><input class="input" id="e-country" value="" placeholder="e.g. US"/></div>` : ''}
+      ${isManual && showNull(item.genres?.length) ? `<div class="input-group"><label>Genres</label><input class="input" id="e-genres" value="" placeholder="Comma separated..."/></div>` : ''}
       <div class="input-group"><label>Poster URL</label><input class="input" id="e-poster" type="url" value="${esc(item.posterUrl||'')}" placeholder="Paste poster image URL..."/></div>
       <div class="input-group"><label>Banner URL</label><input class="input" id="e-banner" type="url" value="${esc(item.backdropUrl||'')}" placeholder="Paste backdrop/banner image URL..."/></div>
       <div class="input-group"><label>Overview</label><textarea class="input" id="e-overview" rows="3" placeholder="Write a brief description...">${esc(item.overview||'')}</textarea></div>
@@ -908,26 +913,45 @@ function openEditModal(id) {
 
 async function saveEdit(id) {
   const item = state.items.find(x=>x.id===id);
-  const isManual = !item?.tmdbId && !item?.imdbId;
-  const patch = {
-    title:    document.getElementById('e-title').value,
-    posterUrl:document.getElementById('e-poster').value || null,
-    backdropUrl:document.getElementById('e-banner').value || null,
-    overview: document.getElementById('e-overview').value || null,
-    comment:  document.getElementById('e-comment')?.value || null,
-  };
-  if (!item.rating || isManual) {
-    const r = parseFloat(document.getElementById('e-rating').value)||null;
-    if (isManual) {
-      patch.rating = r;
-      const idx = state.items.findIndex(x => x.id === id);
-      if (idx >= 0) state.items[idx].userRating = r;
-    } else {
-      patch.shared_rating = r;
-      const idx = state.items.findIndex(x => x.id === id);
-      if (idx >= 0) state.items[idx].rating = r;
-    }
+  const patch = {};
+
+  const titleEl = document.getElementById('e-title');
+  const ratingEl = document.getElementById('e-rating');
+  const yearEl = document.getElementById('e-year');
+  const runtimeEl = document.getElementById('e-runtime');
+  const languageEl = document.getElementById('e-language');
+  const countryEl = document.getElementById('e-country');
+  const genresEl = document.getElementById('e-genres');
+  const posterEl = document.getElementById('e-poster');
+  const bannerEl = document.getElementById('e-banner');
+  const overviewEl = document.getElementById('e-overview');
+  const commentEl = document.getElementById('e-comment');
+
+  if (titleEl) patch.shared_title = titleEl.value || null;
+  if (ratingEl) patch.shared_rating = parseFloat(ratingEl.value) || null;
+  if (yearEl) patch.shared_year = parseInt(yearEl.value) || null;
+  if (runtimeEl) patch.shared_runtime = parseInt(runtimeEl.value) || null;
+  if (languageEl) patch.shared_language = languageEl.value || null;
+  if (countryEl) patch.shared_country = countryEl.value || null;
+  if (genresEl) patch.shared_genres = genresEl.value ? genresEl.value.split(',').map(s=>s.trim()).filter(Boolean) : [];
+
+  if (posterEl) {
+    if (!item.posterUrl) patch.shared_poster = posterEl.value || null;
+    else patch.posterUrl = posterEl.value || null;
   }
+  if (bannerEl) {
+    if (!item.backdropUrl) patch.shared_backdrop = bannerEl.value || null;
+    else patch.backdropUrl = bannerEl.value || null;
+  }
+  if (overviewEl) {
+    if (!item.overview) patch.shared_overview = overviewEl.value || null;
+    else patch.overview = overviewEl.value || null;
+  }
+  if (commentEl) {
+    if (!item.comment) patch.shared_comment = commentEl.value || null;
+    else patch.comment = commentEl.value || null;
+  }
+
   await updateItem(id, patch);
   document.getElementById('edit-modal')?.remove();
   toast('Changes saved!');
