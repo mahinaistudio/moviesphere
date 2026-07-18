@@ -917,9 +917,14 @@ async function saveEdit(id) {
     comment:  document.getElementById('e-comment')?.value || null,
   };
   if (!item.rating || isManual) {
-    patch.rating = parseFloat(document.getElementById('e-rating').value)||null;
-    const idx = state.items.findIndex(x => x.id === id);
-    if (idx >= 0) state.items[idx].userRating = patch.rating;
+    const r = parseFloat(document.getElementById('e-rating').value)||null;
+    if (isManual) {
+      patch.rating = r;
+    } else {
+      patch.shared_rating = r;
+      const idx = state.items.findIndex(x => x.id === id);
+      if (idx >= 0) state.items[idx].rating = r;
+    }
   }
   await updateItem(id, patch);
   document.getElementById('edit-modal')?.remove();
