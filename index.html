@@ -1853,14 +1853,16 @@ function renderSettings() {
 function renderUsersList() {
   const users = state.usersList || [];
   if (users.length === 0) return '<p style="font-size:13px;color:var(--text-tertiary)">Loading users...</p>';
+  users.sort((a, b) => (b.is_admin ? 1 : 0) - (a.is_admin ? 1 : 0));
   return `<div style="display:flex;flex-direction:column;gap:8px">
-    ${users.map(u => `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg-input);border:1px solid var(--border-default);border-radius:var(--radius-md)">
-      <img src="${esc(u.avatar_url || '')}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid var(--border-subtle);flex-shrink:0"/>
+    ${users.map(u => `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg-input);border:1px solid ${u.is_admin ? 'rgba(245,158,11,0.3)' : 'var(--border-default)'};border-radius:var(--radius-md)">
+      <img src="${esc(u.avatar_url || '')}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid ${u.is_admin ? 'rgba(245,158,11,0.3)' : 'var(--border-subtle)'};flex-shrink:0"/>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(u.name || u.email)}</div>
         <div style="font-size:11px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(u.email || '')}</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        ${u.is_admin ? `<span style="font-size:11px;font-weight:600;color:#FBBF24;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius-md);padding:7px 14px;display:inline-flex;align-items:center;gap:4px">${ic('crown').replace(/width="18"/g,'width="12"').replace(/height="18"/g,'height="12"')}ADMIN</span>` : `<span style="font-size:11px;font-weight:600;color:#86EFAC;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);border-radius:var(--radius-md);padding:7px 14px;display:inline-flex;align-items:center;gap:4px">${ic('check').replace(/width="18"/g,'width="12"').replace(/height="18"/g,'height="12"')}MEMBER</span>`}
         ${u.google_id !== state.user?.google_id ? `<button class="btn btn-ghost" style="padding:7px 14px;color:var(--danger)" onclick="event.stopPropagation();deleteUser('${esc(u.google_id)}', '${esc(u.name || u.email)}')" title="Delete user">${ic('trash')}</button>` : ''}
       </div>
     </div>`).join('')}
