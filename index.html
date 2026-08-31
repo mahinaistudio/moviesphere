@@ -798,7 +798,7 @@ function renderLibrary() {
 
 function libraryListHTML() {
   const { items } = state;
-  let filtered = items;
+  let filtered = items.filter(x => x.status !== 'completed');
   if (libFilter !== 'all') filtered = filtered.filter(x=>x.type===libFilter);
   if (libLang !== 'all') filtered = filtered.filter(x=>x.language===libLang);
   if (libSearch.trim()) { const q=libSearch.toLowerCase(); filtered=filtered.filter(x=>x.title.toLowerCase().includes(q)); }
