@@ -1861,8 +1861,6 @@ function renderUsersList() {
         <div style="font-size:11px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(u.email || '')}</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-        ${u.is_admin ? `<span style="font-size:11px;font-weight:600;color:#FBBF24;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius-md);padding:7px 14px;display:inline-flex;align-items:center;gap:4px">${ic('crown').replace(/width="18"/g,'width="12"').replace(/height="18"/g,'height="12"')}ADMIN</span>` : `<span style="font-size:11px;font-weight:600;color:#86EFAC;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);border-radius:var(--radius-md);padding:7px 14px;display:inline-flex;align-items:center;gap:4px">${ic('check').replace(/width="18"/g,'width="12"').replace(/height="18"/g,'height="12"')}MEMBER</span>`}
-        ${u.google_id !== state.user?.google_id ? `<button class="btn btn-ghost" style="padding:7px 14px;font-size:11px;color:${u.is_admin ? 'var(--warning)' : 'var(--accent)'}" onclick="event.stopPropagation();toggleUserAdmin('${esc(u.google_id)}', ${!u.is_admin}, '${esc(u.name || u.email)}')" title="${u.is_admin ? 'Demote' : 'Promote'}">${u.is_admin ? ic('user') : ic('crown')}</button>` : ''}
         ${u.google_id !== state.user?.google_id ? `<button class="btn btn-ghost" style="padding:7px 14px;color:var(--danger)" onclick="event.stopPropagation();deleteUser('${esc(u.google_id)}', '${esc(u.name || u.email)}')" title="Delete user">${ic('trash')}</button>` : ''}
       </div>
     </div>`).join('')}
@@ -1877,29 +1875,6 @@ async function loadUsers() {
   } catch {}
 }
 
-async function toggleUserAdmin(googleId, makeAdmin, name) {
-  if (makeAdmin) {
-    if (!await confirmModal(`Promote "${name}" to admin? You will be demoted to member.`)) return;
-  } else {
-    if (!await confirmModal(`Demote "${name}" from admin?`)) return;
-  }
-  try {
-    const r = await api('PUT', '/api/users/' + googleId, { is_admin: makeAdmin });
-    if (r.demoted_self) {
-      state.isAdmin = false;
-      const me = await api('GET', '/auth/me');
-      state.user = me;
-      state.isAdmin = !!me.is_admin;
-    }
-    await loadUsers();
-    renderUserSidebar();
-    renderNav();
-    render();
-    toast(makeAdmin ? `User "${name}" promoted to admin!` : `User "${name}" demoted to member.`);
-  } catch (e) {
-    toast('Failed: ' + e.message, 'err');
-  }
-}
 
 async function deleteUser(googleId, name) {
   if (!await confirmModal(`Delete user "${name}"? Their data will be permanently removed.`)) return;
