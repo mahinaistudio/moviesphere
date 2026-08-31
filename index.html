@@ -55,7 +55,6 @@ select.input option{background:rgba(16,16,24,0.97);color:var(--text-primary);pad
 [id^="lib-lang"] .dropdown-item:not([data-val="all"]){text-transform:uppercase}
 .dropdown-side-right .dropdown-menu{left:calc(100% + 6px);top:0}
 @media(hover:hover)and(pointer:fine){}
-.dropdown-btn 
 .dd-h42 .dropdown-btn{height:42px;padding:8px 14px;box-sizing:border-box;border-radius:var(--radius-md)}
 .dropdown-item:hover{background:rgba(255,255,255,0.06);color:var(--text-primary)}
 .dropdown-item.selected{color:var(--accent);background:var(--accent-soft)}
@@ -91,7 +90,7 @@ textarea.input{resize:none}
 .poster-info{padding:12px 12px 14px;flex:1;display:flex;flex-direction:column;position:relative;z-index:2}
 .ep-row{display:flex;align-items:center;gap:11px;padding:9px 14px;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition-fast)}.ep-row:hover{background:rgba(255,255,255,0.04)}
 .ep-check{width:20px;height:20px;border-radius:6px;border:2px solid var(--border-default);display:flex;align-items:center;justify-content:center;transition:all var(--transition-fast);flex-shrink:0}.ep-check.done{background:var(--accent);border-color:var(--accent);box-shadow:0 0 10px rgba(139,92,246,0.3)}.ep-check svg{width:12px;height:12px;color:#fff}
-.chip{display:inline-flex;align-items:center;padding:4px 10px;border-radius:var(--radius-md);font-size:12px;font-weight:500;background:rgba(139,92,246,0.08);color:#C4B5FD;border:1px solid rgba(139,92,246,0.12);transition:all var(--transition-fast)}.chip:hover{background:rgba(139,92,246,0.12);border-color:rgba(139,92,246,0.2)}
+.chip{display:inline-flex;align-items:center;padding:6px 14px;border-radius:var(--radius-md);font-size:13px;font-weight:500;background:rgba(139,92,246,0.08);color:#C4B5FD;border:1px solid rgba(139,92,246,0.12);transition:all var(--transition-fast)}.chip:hover{background:rgba(139,92,246,0.12);border-color:rgba(139,92,246,0.2)}
 .toast{position:fixed;bottom:24px;right:24px;background:rgba(16,16,24,0.9);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:14px 20px;max-width:320px;z-index:9999;font-size:13.5px;font-weight:500;box-shadow:var(--shadow-lg);animation:toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1);display:flex;align-items:center;gap:10px}.toast svg{width:18px;height:18px;flex-shrink:0}.toast.ok{border-color:rgba(34,197,94,0.3);color:#86EFAC}.toast.ok svg{color:var(--success)}.toast.err{border-color:rgba(239,68,68,0.3);color:#FCA5A5}.toast.err svg{color:var(--danger)}
 @keyframes toastIn{from{opacity:0;transform:translateY(12px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .2s ease}
@@ -1863,8 +1862,8 @@ function renderUsersList() {
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
         ${u.is_admin ? `<span style="font-size:10px;font-weight:700;color:#FBBF24;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius-md);padding:5px 10px;display:inline-flex;align-items:center;gap:3px">${ic('crown').replace(/width="18"/g,'width="10"').replace(/height="18"/g,'height="10"')}ADMIN</span>` : `<span style="font-size:10px;font-weight:700;color:#86EFAC;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);border-radius:var(--radius-md);padding:5px 10px;display:inline-flex;align-items:center;gap:3px">${ic('check').replace(/width="18"/g,'width="10"').replace(/height="18"/g,'height="10"')}MEMBER</span>`}
-        ${u.google_id !== state.user?.google_id ? `<button class="btn btn-ghost" style="padding:6px;font-size:11px;color:${u.is_admin ? 'var(--warning)' : 'var(--accent)'}" onclick="event.stopPropagation();toggleUserAdmin('${esc(u.google_id)}', ${!u.is_admin}, '${esc(u.name || u.email)}')" title="${u.is_admin ? 'Demote' : 'Promote'}">${u.is_admin ? ic('user') : ic('crown')}</button>` : ''}
-        ${u.google_id !== state.user?.google_id ? `<button class="btn btn-ghost" style="padding:6px;color:var(--danger)" onclick="event.stopPropagation();deleteUser('${esc(u.google_id)}', '${esc(u.name || u.email)}')" title="Delete user">${ic('trash')}</button>` : ''}
+        ${u.google_id !== state.user?.google_id ? `<button class="btn btn-ghost" style="padding:7px 14px;font-size:11px;color:${u.is_admin ? 'var(--warning)' : 'var(--accent)'}" onclick="event.stopPropagation();toggleUserAdmin('${esc(u.google_id)}', ${!u.is_admin}, '${esc(u.name || u.email)}')" title="${u.is_admin ? 'Demote' : 'Promote'}">${u.is_admin ? ic('user') : ic('crown')}</button>` : ''}
+        ${u.google_id !== state.user?.google_id ? `<button class="btn btn-ghost" style="padding:7px 14px;color:var(--danger)" onclick="event.stopPropagation();deleteUser('${esc(u.google_id)}', '${esc(u.name || u.email)}')" title="Delete user">${ic('trash')}</button>` : ''}
       </div>
     </div>`).join('')}
   </div>`;
